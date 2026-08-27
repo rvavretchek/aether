@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Aether — Sessão de Mesa Redonda — 2026-08-10</title>
+<style>
+  :root {
+    --bg: #f6f4ef;
+    --paper: #ffffff;
+    --ink: #2a2620;
+    --muted: #6b6459;
+    --line: #e4ddd0;
+    --accent: #b3541e;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 3rem 1.25rem 5rem;
+    background: linear-gradient(180deg, #efe9dc 0%, var(--bg) 350px);
+    color: var(--ink);
+    font-family: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+    line-height: 1.55;
+  }
+  .sheet {
+    max-width: 760px;
+    margin: 0 auto;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    box-shadow: 0 20px 60px -30px rgba(40, 30, 10, 0.35);
+    padding: 3rem 3rem 2.5rem;
+  }
+  header { text-align: center; margin-bottom: 2.5rem; }
+  header .eyebrow {
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    color: var(--accent);
+    font-family: "Trebuchet MS", sans-serif;
+  }
+  h1 { font-size: 2rem; margin: 0.4rem 0 0.2rem; }
+  header .date {
+    color: var(--muted);
+    font-style: italic;
+    font-size: 0.95rem;
+  }
+  .roster {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.6rem 1.4rem;
+    margin: 1.6rem 0 0;
+    font-family: "Trebuchet MS", sans-serif;
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  .roster span.icon { margin-right: 0.35rem; }
+  hr.rule {
+    border: none;
+    border-top: 1px solid var(--line);
+    margin: 2.2rem 0;
+  }
+  h2 {
+    font-family: "Trebuchet MS", sans-serif;
+    font-size: 1.05rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    margin-bottom: 1rem;
+  }
+  p.intro { color: var(--muted); font-style: italic; }
+  .line {
+    display: flex;
+    gap: 0.75rem;
+    margin: 1.1rem 0;
+    align-items: flex-start;
+  }
+  .line .icon {
+    font-size: 1.3rem;
+    line-height: 1.6;
+    flex: none;
+  }
+  .line .who {
+    font-family: "Trebuchet MS", sans-serif;
+    font-weight: bold;
+    color: var(--ink);
+  }
+  .line .role {
+    font-family: "Trebuchet MS", sans-serif;
+    font-size: 0.72rem;
+    color: var(--muted);
+    font-weight: normal;
+  }
+  .line blockquote {
+    margin: 0.2rem 0 0;
+    padding: 0;
+  }
+  ul.decisions { padding-left: 1.2rem; }
+  ul.decisions li { margin-bottom: 0.5rem; }
+  .keepsake-quote {
+    margin: 2rem 0;
+    padding: 1.2rem 1.5rem;
+    border-left: 3px solid var(--accent);
+    background: #fbf6ec;
+    font-style: italic;
+    color: #4a4234;
+  }
+  footer {
+    text-align: center;
+    margin-top: 2.6rem;
+    font-family: "Trebuchet MS", sans-serif;
+    font-size: 0.75rem;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+</style>
+</head>
+<body>
+<div class="sheet">
+  <header>
+    <div class="eyebrow">BMad Party Mode — Aether</div>
+    <h1>A Mesa Redonda do Aether</h1>
+    <div class="date">10 de agosto de 2026</div>
+    <div class="roster">
+      <span><span class="icon">📊</span>Mary — Analista</span>
+      <span><span class="icon">📋</span>John — Product Manager</span>
+      <span><span class="icon">🏗️</span>Winston — Arquiteto</span>
+      <span><span class="icon">🎨</span>Sally — UX Designer</span>
+      <span><span class="icon">💻</span>Amelia — Engenheira</span>
+    </div>
+  </header>
+
+  <p class="intro">Cinco vozes, um ponto de partida (<code>Aether.md</code>) e um objetivo duplo: uma peça de portfólio que também economiza tempo real de desenvolvimento — e que uma IA consiga manejar tão bem quanto um humano.</p>
+
+  <hr class="rule">
+
+  <h2>A regra que ficou</h2>
+  <div class="line">
+    <span class="icon">🏗️</span>
+    <div>
+      <div class="who">Winston <span class="role">Arquiteto</span></div>
+      <blockquote>Você transformou um alerta vago em um teste de duas perguntas: agrega valor real? Pode ser preparado pro futuro sem impactar o funcionamento atual? Isso não é filosofia, é um filtro operacional.</blockquote>
+    </div>
+  </div>
+
+  <h2>A decisão que não teve vencedor único</h2>
+  <div class="line">
+    <span class="icon">💻</span>
+    <div>
+      <div class="who">Amelia <span class="role">Engenheira</span></div>
+      <blockquote>JWT. Stateless, alinhado com o resto da stack.</blockquote>
+    </div>
+  </div>
+  <div class="line">
+    <span class="icon">🏗️</span>
+    <div>
+      <div class="who">Winston <span class="role">Arquiteto</span></div>
+      <blockquote>Discordo — sem caminho de revogação, um revisor técnico vai marcar isso como buraco, não como escolha consciente.</blockquote>
+    </div>
+  </div>
+  <p class="intro">Resolvido pelo Boss: JWT + Refresh Token. Tempo sobra, robustez vence.</p>
+
+  <div class="keepsake-quote">
+    "Depois de mais de 30 anos e eu ainda não me esqueci." — sobre a árvore visual do Novell NetWare 4.1 / NDS, a semente da visão de admin do Aether.
+  </div>
+
+  <h2>O que ficou fechado para o MVP</h2>
+  <ul class="decisions">
+    <li>tRPC + Prisma + TypeScript-first, decisões decisivas, sem "ambos suportados"</li>
+    <li>Auth: JWT + Refresh Token, Argon2id + Pepper</li>
+    <li>CLI enxuto, testes com scaffolding automático, admin funcional sem drag-and-drop</li>
+    <li>Quatro preparações de arquitetura sem custo de escopo: multitenancy no schema, modelo de entidades hierárquico, <code>AuthProvider</code> como adapter, abstração de secrets</li>
+  </ul>
+
+  <h2>O que fica no horizonte, com nome</h2>
+  <ul class="decisions">
+    <li>Auth pluggável: Keycloak, OpenBAO, e o que a comunidade trouxer depois</li>
+    <li>Painel admin estilo NDS: árvore completa, drag-and-drop, objetos de negócio reais</li>
+    <li>Criptografia seletiva com custódia múltipla de chaves, multitenant de verdade</li>
+  </ul>
+
+  <hr class="rule">
+  <footer>Registrado em <code>_bmad-output/planning-artifacts/aether-mvp-vision-decisoes.md</code> — a conversa continua no Product Brief.</footer>
+</div>
+</body>
+</html>
