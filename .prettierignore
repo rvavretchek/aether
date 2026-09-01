@@ -1,0 +1,14 @@
+node_modules/
+_bmad/
+_bmad-output/
+design-artifacts/
+docs/
+.agent/
+.agents/
+.claude/
+.qwen/
+.opencode/
+.github/
+pnpm-lock.yaml
+# Docs pré-existentes do projeto — fora do escopo desta story, não reformatar.
+*.md

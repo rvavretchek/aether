@@ -1,0 +1,32 @@
+{
+  "name": "aether-admin",
+  "version": "0.1.0",
+  "description": "Aether CLI — scaffolds and manages Aether framework projects.",
+  "type": "module",
+  "bin": {
+    "aether-admin": "./bin/aether-admin.js"
+  },
+  "engines": {
+    "node": "24.x"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint .",
+    "format:check": "prettier --check .",
+    "format": "prettier --write .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "tsx": "4.19.2"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "vitest": "4.1.11",
+    "eslint": "10.9.1",
+    "typescript-eslint": "8.68.0",
+    "prettier": "3.9.6",
+    "@types/node": "24.0.0"
+  },
+  "license": "MIT"
+}
