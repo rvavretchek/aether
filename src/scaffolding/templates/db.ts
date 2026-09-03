@@ -108,6 +108,21 @@ export function buildDbFiles(): Record<string, string> {
       '  @@map("refresh_tokens")',
       '}',
       '',
+      '// Física e logicamente separada de RefreshToken (AD-10, Story 2.2) — nunca',
+      '// reaproveitar colunas/tabela da revogação de token pro rate limiter. count é',
+      '// incrementado via upsert atômico (PrismaRateLimiter) — nunca "ler, somar,',
+      '// escrever" em dois passos (mesma classe de TOCTOU corrigida no code review da',
+      '// Story 2.1 pro `refresh`).',
+      'model RateLimitHit {',
+      '  id          String   @id @default(uuid(7))',
+      '  identifier  String',
+      '  windowStart DateTime @map("window_start")',
+      '  count       Int      @default(1)',
+      '',
+      '  @@unique([identifier, windowStart])',
+      '  @@map("rate_limit_hits")',
+      '}',
+      '',
     ].join('\n'),
 
     // Prisma 7: `datasource` no schema.prisma só declara o provider — a connection string
@@ -198,6 +213,33 @@ export function buildDbFiles(): Record<string, string> {
       '',
       '-- AddForeignKey',
       'ALTER TABLE "refresh_tokens" ADD CONSTRAINT "refresh_tokens_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;',
+      '',
+    ].join('\n'),
+
+    // Migration incremental pra RateLimitHit (Story 2.2, AD-10) — SQL escrito à mão
+    // seguindo a MESMA convenção determinística que a migration inicial já usa
+    // (`prisma migrate diff --script` não produziu nenhuma saída neste ambiente
+    // específico, mesmo pra um schema trivial de um único model — divergente do que
+    // funcionou na Story 2.1; não investigado a fundo, provavelmente uma regressão
+    // pontual do `migrate diff` no Windows nesta versão do Prisma. A tradução
+    // schema→DDL pra um CREATE TABLE simples + índice único é mecânica e já está
+    // 100% verificada contra o que o Prisma gerou de verdade nas 3 tabelas
+    // anteriores — mesmos tipos de coluna, mesma convenção de nome de índice
+    // `<tabela>_<col1>_<col2>_key`, mesma ausência de DEFAULT pro id (uuid(7) é
+    // gerado pelo Prisma Client, não pelo banco)).
+    'migrations/20260902000000_add_rate_limit_hit/migration.sql': [
+      '-- CreateTable',
+      'CREATE TABLE "rate_limit_hits" (',
+      '    "id" TEXT NOT NULL,',
+      '    "identifier" TEXT NOT NULL,',
+      '    "window_start" TIMESTAMP(3) NOT NULL,',
+      '    "count" INTEGER NOT NULL DEFAULT 1,',
+      '',
+      '    CONSTRAINT "rate_limit_hits_pkey" PRIMARY KEY ("id")',
+      ');',
+      '',
+      '-- CreateIndex',
+      'CREATE UNIQUE INDEX "rate_limit_hits_identifier_window_start_key" ON "rate_limit_hits"("identifier", "window_start");',
       '',
     ].join('\n'),
 

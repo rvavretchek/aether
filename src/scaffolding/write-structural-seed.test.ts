@@ -76,6 +76,10 @@ describe('writeStructuralSeed', () => {
       'apps/api/src/core/auth/prisma-token-revocation-store.test.ts',
       'apps/api/src/core/auth/router.ts',
       'apps/api/src/core/auth/router.test.ts',
+      'apps/api/src/core/auth/rate-limiter.ts',
+      'apps/api/src/core/auth/rate-limit-store.ts',
+      'apps/api/src/core/auth/prisma-rate-limiter.ts',
+      'apps/api/src/core/auth/prisma-rate-limiter.test.ts',
       'packages/shared/src/schemas/auth.ts',
       'packages/shared/package.json',
       'packages/shared/tsconfig.json',
@@ -88,6 +92,7 @@ describe('writeStructuralSeed', () => {
       'packages/db/src/client.ts',
       'packages/db/migrations/migration_lock.toml',
       'packages/db/migrations/20260901000000_init_auth/migration.sql',
+      'packages/db/migrations/20260902000000_add_rate_limit_hit/migration.sql',
       'docker/docker-compose.dev.yml',
       'docker/Dockerfile.dev',
     ];
@@ -157,6 +162,19 @@ describe('writeStructuralSeed', () => {
     expect(schema).toMatch(/model\s+User\s*\{/);
     expect(schema).toMatch(/model\s+RefreshToken\s*\{/);
     expect(schema).toContain('tenantId');
+  });
+
+  it('packages/db/schema.prisma has RateLimitHit, physically separate from RefreshToken (Story 2.2, AD-10)', async () => {
+    const targetDir = await makeTempDir();
+
+    await writeStructuralSeed(targetDir, 'my-app');
+
+    const schema = await readFile(
+      join(targetDir, 'packages/db/schema.prisma'),
+      'utf-8',
+    );
+    expect(schema).toMatch(/model\s+RateLimitHit\s*\{/);
+    expect(schema).toContain('@@unique([identifier, windowStart])');
   });
 
   it('pre-approves the esbuild build script in pnpm-workspace.yaml — otherwise `pnpm install` fails with ERR_PNPM_IGNORED_BUILDS on pnpm 11 (verified against a real install)', async () => {

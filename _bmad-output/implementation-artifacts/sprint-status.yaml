@@ -52,8 +52,9 @@ development_status:
   1-1-aether-admin-new-scaffolding: done
   epic-1-retrospective: optional
 
-  epic-2: in-progress
+  epic-2: done
   2-1-login-jwt-refresh: done
+  2-2-rate-limiting-login: done
   epic-2-retrospective: optional
 
   epic-3: backlog
