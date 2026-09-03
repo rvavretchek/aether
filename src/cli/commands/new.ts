@@ -46,6 +46,14 @@ async function defaultInstallDependencies(targetDir: string): Promise<void> {
   await runCommand('pnpm install', targetDir);
 }
 
+async function defaultGeneratePrismaClient(targetDir: string): Promise<void> {
+  // Sem isso, `@prisma/client` fica com o client "vazio" que o pacote publica antes de
+  // `prisma generate` rodar — nenhum model exportado (nem `PrismaClient`), typecheck
+  // do projeto gerado quebra na hora (achado real da Story 2.1, Task 7). Roda depois do
+  // install (precisa do pacote no disco) e antes do format.
+  await runCommand('pnpm --filter db run generate', targetDir);
+}
+
 async function defaultFormatGeneratedCode(targetDir: string): Promise<void> {
   // Deixa o Prettier (já instalado pelo install acima) ser a autoridade final de
   // formatação — mais robusto do que tentar bater byte-a-byte o estilo dele nos
@@ -70,6 +78,8 @@ export interface RunNewOptions {
   writeSeed?: (targetDir: string, projectName: string) => Promise<void>;
   /** Injetável para teste — default roda `pnpm install` de verdade no diretório gerado. */
   installDependencies?: (targetDir: string) => Promise<void>;
+  /** Injetável para teste — default roda `pnpm --filter db run generate` no diretório gerado. */
+  generatePrismaClient?: (targetDir: string) => Promise<void>;
   /** Injetável para teste — default roda `pnpm exec prettier --write .` no diretório gerado. */
   formatGeneratedCode?: (targetDir: string) => Promise<void>;
 }
@@ -94,6 +104,8 @@ export async function runNew(
   const writeSeed = options.writeSeed ?? writeStructuralSeed;
   const installDependencies =
     options.installDependencies ?? defaultInstallDependencies;
+  const generatePrismaClient =
+    options.generatePrismaClient ?? defaultGeneratePrismaClient;
   const formatGeneratedCode =
     options.formatGeneratedCode ?? defaultFormatGeneratedCode;
 
@@ -112,6 +124,7 @@ export async function runNew(
     await mkdir(targetDir, { recursive: true });
     await writeSeed(targetDir, projectName);
     await installDependencies(targetDir);
+    await generatePrismaClient(targetDir);
     await formatGeneratedCode(targetDir);
   } catch (error) {
     await rm(targetDir, { recursive: true, force: true });

@@ -136,8 +136,10 @@ flowchart TB
 | ESLint | 10.x (flat config, sucessor do 9.x — 9.x é EOL desde 2026-08-06) + typescript-eslint |
 | Prettier | 3.x |
 | argon2 | binding nativo, Argon2id |
-| jose | assinatura/verificação de JWT (EdDSA) |
+| jose | assinatura/verificação de JWT (HS256 no MVP — ver nota de reconciliação abaixo) |
 | Pino | logging estruturado |
+
+> **Nota de reconciliação (Story 2.1, 2026-08-31):** esta linha originalmente fixava EdDSA. Na implementação de login (Story 2.1), a escolha foi revertida pra HS256: EdDSA exigiria gerar/gerenciar um keypair PEM assimétrico via `SecretsProvider` — complexidade de key management sem nenhum requisito do projeto que a justifique ainda (não há, no MVP, nenhum serviço externo que precise verificar o token sem ter acesso ao segredo de assinatura — o único cenário em que assimetria compra algo real). HS256 com chave simétrica de alta entropia, lida via `SecretsProvider` do mesmo jeito que o pepper do Argon2id (FR-8), atende NFR-4 ("sem alegação de segurança sem reforço técnico real") com uma superfície de implementação bem menor. EdDSA fica candidato de upgrade futuro se/quando um motivo real aparecer (ex.: um verificador externo que não deve ter o segredo de assinatura).
 
 ## Structural Seed
 

@@ -22,6 +22,7 @@ function fakeSetupOptions() {
       );
     }),
     installDependencies: vi.fn().mockResolvedValue(undefined),
+    generatePrismaClient: vi.fn().mockResolvedValue(undefined),
     formatGeneratedCode: vi.fn().mockResolvedValue(undefined),
   };
 }
@@ -42,6 +43,7 @@ describe('runNew', () => {
 
     expect(result).toEqual({ ok: true });
     expect(options.installDependencies).toHaveBeenCalledWith(targetDir);
+    expect(options.generatePrismaClient).toHaveBeenCalledWith(targetDir);
     expect(options.formatGeneratedCode).toHaveBeenCalledWith(targetDir);
     await expect(
       access(join(targetDir, 'pnpm-workspace.yaml')),
@@ -91,6 +93,24 @@ describe('runNew', () => {
     if (!result.ok) {
       expect(result.error).toContain('network unreachable');
     }
+    await expect(access(targetDir)).rejects.toThrow();
+  });
+
+  it('rolls back (deletes target dir) when generating the Prisma client fails after a successful install (AC #2, Story 2.1)', async () => {
+    const root = await makeTempDir();
+    const targetDir = join(root, 'prisma-generate-fails');
+    const options = fakeSetupOptions();
+    options.generatePrismaClient.mockRejectedValue(
+      new Error('prisma generate explodiu'),
+    );
+
+    const result = await runNew(targetDir, 'prisma-generate-fails', options);
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toContain('prisma generate explodiu');
+    }
+    expect(options.formatGeneratedCode).not.toHaveBeenCalled();
     await expect(access(targetDir)).rejects.toThrow();
   });
 

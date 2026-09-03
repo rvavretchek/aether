@@ -2,6 +2,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { buildRootFiles } from './templates/root.js';
 import { buildApiFiles } from './templates/api.js';
+import { buildAuthFiles } from './templates/auth.js';
 import { buildWebFiles } from './templates/web.js';
 import { buildSharedFiles } from './templates/shared.js';
 import { buildDbFiles } from './templates/db.js';
@@ -30,6 +31,7 @@ export async function writeStructuralSeed(
   const allFiles: Record<string, string> = {
     ...prefixKeys('.', buildRootFiles(projectName)),
     ...prefixKeys('apps/api', buildApiFiles()),
+    ...prefixKeys('apps/api', buildAuthFiles()),
     ...prefixKeys('apps/web', buildWebFiles(projectName)),
     ...prefixKeys('packages/shared', buildSharedFiles()),
     ...prefixKeys('packages/db', buildDbFiles()),

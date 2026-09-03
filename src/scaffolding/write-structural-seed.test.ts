@@ -56,11 +56,27 @@ describe('writeStructuralSeed', () => {
       'apps/api/src/server.ts',
       'apps/api/src/root-router.ts',
       'apps/api/src/context.ts',
+      'apps/api/src/test-utils.ts',
+      'apps/api/src/core/providers.ts',
       'apps/api/src/modules/system/router.ts',
       'apps/api/src/modules/system/router.test.ts',
       'apps/api/src/modules/system/repository.ts',
       'apps/api/src/modules/system/schema.ts',
       'apps/api/src/modules/system/resources.ts',
+      'apps/api/src/core/secrets/secrets-provider.ts',
+      'apps/api/src/core/secrets/env-secrets-provider.ts',
+      'apps/api/src/core/secrets/env-secrets-provider.test.ts',
+      'apps/api/src/core/auth/auth-provider.ts',
+      'apps/api/src/core/auth/user-lookup.ts',
+      'apps/api/src/core/auth/argon2-auth-provider.ts',
+      'apps/api/src/core/auth/argon2-auth-provider.test.ts',
+      'apps/api/src/core/auth/token-revocation-store.ts',
+      'apps/api/src/core/auth/refresh-token-store.ts',
+      'apps/api/src/core/auth/prisma-token-revocation-store.ts',
+      'apps/api/src/core/auth/prisma-token-revocation-store.test.ts',
+      'apps/api/src/core/auth/router.ts',
+      'apps/api/src/core/auth/router.test.ts',
+      'packages/shared/src/schemas/auth.ts',
       'packages/shared/package.json',
       'packages/shared/tsconfig.json',
       'packages/shared/vitest.config.ts',
@@ -69,6 +85,9 @@ describe('writeStructuralSeed', () => {
       'packages/db/tsconfig.json',
       'packages/db/schema.prisma',
       'packages/db/prisma.config.ts',
+      'packages/db/src/client.ts',
+      'packages/db/migrations/migration_lock.toml',
+      'packages/db/migrations/20260901000000_init_auth/migration.sql',
       'docker/docker-compose.dev.yml',
       'docker/Dockerfile.dev',
     ];
@@ -123,7 +142,7 @@ describe('writeStructuralSeed', () => {
     expect(routerSource).toContain('TODO(Epic 3)');
   });
 
-  it('packages/db/schema.prisma has no model block (no real DB tables in this story)', async () => {
+  it('packages/db/schema.prisma has Tenant/User/RefreshToken models, scoped by Tenant (Story 2.1, AC #5/#7)', async () => {
     const targetDir = await makeTempDir();
 
     await writeStructuralSeed(targetDir, 'my-app');
@@ -132,9 +151,12 @@ describe('writeStructuralSeed', () => {
       join(targetDir, 'packages/db/schema.prisma'),
       'utf-8',
     );
-    expect(schema).not.toMatch(/\bmodel\s+\w+\s*\{/);
     expect(schema).toContain('generator');
     expect(schema).toContain('datasource');
+    expect(schema).toMatch(/model\s+Tenant\s*\{/);
+    expect(schema).toMatch(/model\s+User\s*\{/);
+    expect(schema).toMatch(/model\s+RefreshToken\s*\{/);
+    expect(schema).toContain('tenantId');
   });
 
   it('pre-approves the esbuild build script in pnpm-workspace.yaml — otherwise `pnpm install` fails with ERR_PNPM_IGNORED_BUILDS on pnpm 11 (verified against a real install)', async () => {
@@ -150,7 +172,7 @@ describe('writeStructuralSeed', () => {
     expect(workspaceYaml).toMatch(/onlyBuiltDependencies:/);
   });
 
-  it('does not install prisma/@prisma/client/@prisma/adapter-pg yet (no model exists — verified against a real pnpm install that otherwise crashes on the prisma preinstall script in this environment)', async () => {
+  it('installs prisma/@prisma/client/@prisma/adapter-pg for real now that Tenant/User exist (Story 2.1) and denies only the crashing prisma preinstall script', async () => {
     const targetDir = await makeTempDir();
 
     await writeStructuralSeed(targetDir, 'my-app');
@@ -162,9 +184,19 @@ describe('writeStructuralSeed', () => {
       devDependencies?: Record<string, string>;
     };
     const allDeps = { ...dbPkg.dependencies, ...dbPkg.devDependencies };
-    expect(Object.keys(allDeps)).not.toContain('prisma');
-    expect(Object.keys(allDeps)).not.toContain('@prisma/client');
-    expect(Object.keys(allDeps)).not.toContain('@prisma/adapter-pg');
+    expect(Object.keys(allDeps)).toContain('prisma');
+    expect(Object.keys(allDeps)).toContain('@prisma/client');
+    expect(Object.keys(allDeps)).toContain('@prisma/adapter-pg');
+
+    const workspaceYaml = await readFile(
+      join(targetDir, 'pnpm-workspace.yaml'),
+      'utf-8',
+    );
+    // @prisma/engines precisa rodar (baixa o binário do schema engine); o preinstall do
+    // pacote `prisma` em si é negado explicitamente (readStream must be readable — bug
+    // reproduzido isolado neste ambiente, ver comentário no template de root.ts).
+    expect(workspaceYaml).toMatch(/@prisma\/engines['"]?:\s*true/);
+    expect(workspaceYaml).toMatch(/prisma:\s*false/);
   });
 
   it('does not import @prisma/client or @trpc/* in domain/ (AD-1) — nothing to check yet since domain/ is empty, but repository.ts must not query Prisma', async () => {

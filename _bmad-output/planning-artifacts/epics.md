@@ -98,7 +98,7 @@ FR7:  Epic 2 - login: access+refresh token via AuthProvider
 FR8:  Epic 2 - hashing Argon2id+Pepper
 FR9:  Epic 2 - revogação de refresh token (TokenRevocationStore) — reaproveitada pela Epic 5 (revogação via UI) e Epic 4 (invalidação em massa no reset)
 FR10: Epic 2 - AuthProvider como interface (impl. local no MVP)
-FR11: Epic 3 - Usuário/Grupo/Papel/Módulo como 1a classe, Closure Table
+FR11: Epic 2 (parcial: tabela User básica) + Epic 3 (parcial: Grupo/Papel/Módulo/ModuleClosure + relações)
 FR12: Epic 3 - herança aditiva de Papel sobre Módulo
 FR13: Epic 3 - Papel agrega Recursos (Permissão Nomeada MVP)
 FR14: Epic 5 - CRUD+organização de Usuários/Grupos/Papéis (revogar sessão aqui invoca o mecanismo da Epic 2)
@@ -129,13 +129,14 @@ O desenvolvedor cria um projeto Aether completo (`aether-admin new` → config d
 
 ### Epic 2: Autenticação e Tokens de Acesso
 Um usuário se autentica com segurança via `AuthProvider` trocável (JWT + Refresh, Argon2id+Pepper), com revogação de token antes da expiração e rate limiting no login — tudo Postgres-backed, sem Redis.
-**FRs cobertas:** FR7, FR8, FR9, FR10, FR26, FR28 (parcial — infra + login)
+**FRs cobertas:** FR7, FR8, FR9, FR10, FR11 (parcial — tabela `User` básica), FR26, FR28 (parcial — infra + login)
 **Depende de:** Epic 1
+**Nota de implementação (achado durante `create-story` da Story 2.1, 2026-08-31):** FR11 original mapeava inteiro pra Epic 3, mas login (FR7/FR8) precisa de um `User` persistido pra autenticar contra algo — mesma classe de contradição já resolvida no AD-6 da Story 1.1, dessa vez entre epics. Resolução: a tabela `User` básica (id, tenantId, email, passwordHash, timestamps — escopada por Tenant desde já, AD-5) nasce aqui, na Epic 2. Grupo/Papel/Módulo/ModuleClosure e as relações que ligam `User` a eles (associação/atribuição) continuam na Epic 3 — extensão incremental do schema via nova migration, não retrabalho da tabela já criada.
 
 ### Epic 3: Módulos de Domínio — Geração, Árvore de Identidade e Enforcement
 O desenvolvedor gera um Módulo de domínio completo (schema Prisma, schema Zod, router tRPC protegido, Recursos, teste Vitest) com um comando, e esse Módulo já nasce registrado como nó na árvore de identidade com enforcement ativo por padrão-negado. Um Papel atribuído sobre um Módulo propaga automaticamente aos descendentes.
-**FRs cobertas:** FR3, FR5, FR11, FR12, FR13, FR21, FR27
-**Depende de:** Epic 1, Epic 2 (o middleware de enforcement precisa de um `ctx.user` autenticado pra checar Papel/Recurso)
+**FRs cobertas:** FR3, FR5, FR11 (parcial — Grupo/Papel/Módulo/ModuleClosure + relações com `User`, ver nota na Epic 2), FR12, FR13, FR21, FR27
+**Depende de:** Epic 1, Epic 2 (o middleware de enforcement precisa de um `ctx.user` autenticado pra checar Papel/Recurso, e a tabela `User` já existe pra Epic 3 estender)
 **Nota de implementação:** Geração de código e árvore de identidade são a mesma operação atômica (AD-6) — não são capacidades separáveis, por isso vivem numa única epic. A escrita da Module/ModuleClosure é o único caminho de código reexecutado por todo `generate module` futuro (nesta epic e em qualquer módulo gerado depois, inclusive pós-MVP). Um defeito aqui não fica contido — corrompe a árvore de todo módulo gerado a partir dele. Exigir cobertura de teste com múltiplos níveis de ancestralidade e verificação de depth antes de considerar a epic concluída.
 
 ### Epic 4: Recuperação de Senha
