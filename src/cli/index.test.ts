@@ -1,9 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const { runNewMock } = vi.hoisted(() => ({ runNewMock: vi.fn() }));
+const { runNewMock, runMigrateMock } = vi.hoisted(() => ({
+  runNewMock: vi.fn(),
+  runMigrateMock: vi.fn(),
+}));
 
 vi.mock('./commands/new.js', () => ({
   runNew: runNewMock,
+}));
+
+vi.mock('./commands/migrate.js', () => ({
+  runMigrate: runMigrateMock,
 }));
 
 const { main } = await import('./index.js');
@@ -11,6 +18,7 @@ const { main } = await import('./index.js');
 describe('cli main()', () => {
   beforeEach(() => {
     runNewMock.mockReset();
+    runMigrateMock.mockReset();
   });
 
   it('returns 1 and does not call runNew when project name is missing for `new`', async () => {
@@ -43,5 +51,22 @@ describe('cli main()', () => {
     const code = await main(['bogus']);
     expect(code).toBe(1);
     expect(runNewMock).not.toHaveBeenCalled();
+  });
+
+  it('calls runMigrate with process.cwd() and returns 0 on success', async () => {
+    runMigrateMock.mockResolvedValue({ ok: true });
+
+    const code = await main(['migrate']);
+
+    expect(code).toBe(0);
+    expect(runMigrateMock).toHaveBeenCalledWith(process.cwd());
+  });
+
+  it('returns 1 when runMigrate fails', async () => {
+    runMigrateMock.mockResolvedValue({ ok: false, error: 'deu ruim' });
+
+    const code = await main(['migrate']);
+
+    expect(code).toBe(1);
   });
 });

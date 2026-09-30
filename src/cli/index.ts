@@ -1,5 +1,6 @@
 import { resolve } from 'node:path';
 import { runNew } from './commands/new.js';
+import { runMigrate } from './commands/migrate.js';
 
 export async function main(argv: string[]): Promise<number> {
   const [command, ...rest] = argv;
@@ -26,8 +27,22 @@ export async function main(argv: string[]): Promise<number> {
     return 0;
   }
 
+  if (command === 'migrate') {
+    // Diferente de `new`: roda de dentro de um projeto já existente (`process.cwd()`),
+    // não recebe nome/diretório de projeto novo (AC #1, reconciliação nos Dev Notes).
+    const result = await runMigrate(process.cwd());
+
+    if (!result.ok) {
+      console.error(result.error);
+      return 1;
+    }
+
+    console.log('Migrations aplicadas.');
+    return 0;
+  }
+
   console.error(
-    `Comando desconhecido: "${command ?? ''}". Comandos disponíveis: new.`,
+    `Comando desconhecido: "${command ?? ''}". Comandos disponíveis: new, migrate.`,
   );
   return 1;
 }
