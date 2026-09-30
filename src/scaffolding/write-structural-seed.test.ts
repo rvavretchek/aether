@@ -93,6 +93,7 @@ describe('writeStructuralSeed', () => {
       'packages/db/migrations/migration_lock.toml',
       'packages/db/migrations/20260901000000_init_auth/migration.sql',
       'packages/db/migrations/20260902000000_add_rate_limit_hit/migration.sql',
+      'packages/db/migrations/20260904000000_add_identity_tree/migration.sql',
       'docker/docker-compose.dev.yml',
       'docker/Dockerfile.dev',
     ];
@@ -175,6 +176,28 @@ describe('writeStructuralSeed', () => {
     );
     expect(schema).toMatch(/model\s+RateLimitHit\s*\{/);
     expect(schema).toContain('@@unique([identifier, windowStart])');
+  });
+
+  it('packages/db/schema.prisma has the identity tree models — Group/Role/Module/ModuleClosure/Resource/RoleAssignment (Story 3.1, FR-11/12/13/27)', async () => {
+    const targetDir = await makeTempDir();
+
+    await writeStructuralSeed(targetDir, 'my-app');
+
+    const schema = await readFile(
+      join(targetDir, 'packages/db/schema.prisma'),
+      'utf-8',
+    );
+    expect(schema).toMatch(/model\s+Group\s*\{/);
+    expect(schema).toMatch(/model\s+Role\s*\{/);
+    expect(schema).toMatch(/model\s+Module\s*\{/);
+    expect(schema).toMatch(/model\s+ModuleClosure\s*\{/);
+    expect(schema).toMatch(/model\s+Resource\s*\{/);
+    expect(schema).toMatch(/model\s+RoleAssignment\s*\{/);
+    // append-only (AD-6): unique em (ancestorId, descendantId), depth obrigatório
+    expect(schema).toContain('@@unique([ancestorId, descendantId])');
+    expect(schema).toContain('depth        Int');
+    // Resource.name único globalmente (AD-7) — não escopado por tenant
+    expect(schema).toContain('name     String       @unique');
   });
 
   it('pre-approves the esbuild build script in pnpm-workspace.yaml — otherwise `pnpm install` fails with ERR_PNPM_IGNORED_BUILDS on pnpm 11 (verified against a real install)', async () => {

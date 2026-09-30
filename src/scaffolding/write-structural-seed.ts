@@ -4,6 +4,7 @@ import { buildRootFiles } from './templates/root.js';
 import { buildApiFiles } from './templates/api.js';
 import { buildAuthFiles } from './templates/auth.js';
 import { buildRateLimitFiles } from './templates/rate-limit.js';
+import { buildAuthzFiles } from './templates/authz.js';
 import { buildWebFiles } from './templates/web.js';
 import { buildSharedFiles } from './templates/shared.js';
 import { buildDbFiles } from './templates/db.js';
@@ -34,6 +35,7 @@ export async function writeStructuralSeed(
     ...prefixKeys('apps/api', buildApiFiles()),
     ...prefixKeys('apps/api', buildAuthFiles()),
     ...prefixKeys('apps/api', buildRateLimitFiles()),
+    ...prefixKeys('apps/api', buildAuthzFiles()),
     ...prefixKeys('apps/web', buildWebFiles(projectName)),
     ...prefixKeys('packages/shared', buildSharedFiles()),
     ...prefixKeys('packages/db', buildDbFiles()),

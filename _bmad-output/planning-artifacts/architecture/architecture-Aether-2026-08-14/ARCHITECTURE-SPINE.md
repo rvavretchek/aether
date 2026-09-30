@@ -181,7 +181,6 @@ aether-project/                  # gerado por `aether-admin new`
 
 ```mermaid
 erDiagram
-    TENANT ||--o{ MODULE : escopa
     TENANT ||--o{ USER : escopa
     TENANT ||--o{ GROUP : escopa
     MODULE ||--o{ MODULE_CLOSURE : "ancestorId"
@@ -196,6 +195,8 @@ erDiagram
 ```
 
 *Nota: `RESOURCE.kind` distingue `NAMED_PERMISSION` (implementado no MVP) de `BUSINESS_OBJECT` (contrato `ResourceType` previsto, sem ferramenta de registro genérica no MVP — FR-13). `RESOURCE.name` é único globalmente e segue o padrão `<module-slug>.<ação>` (AD-7). `MODULE_CLOSURE` tem `depth` obrigatório (0 = linha self-referencial) e é append-only no MVP — sem reparent (AD-6). `RATE_LIMIT_HIT(identifier, windowStart, count)` (AD-10) é uma tabela de infraestrutura própria, fora do escopo desta ERD de identidade.*
+
+> **Nota de reconciliação (Story 3.1, 2026-09-04, decisão do Boss):** este ERD originalmente trazia `TENANT ||--o{ MODULE : escopa` (Module pertencendo a um Tenant). Ao implementar o schema real da Story 3.1, isso colidiu com AD-7/a nota acima ("`RESOURCE.name` é único globalmente... resource corresponde a operação de código, não a dado de tenant"): `Resource` tem FK obrigatória e única pra um `Module`, então um `Module` tenant-scoped tornava qualquer `Resource` utilizável só pelo tenant "dono" do seu `Module` — RBAC quebrado pra qualquer outro tenant da instalação. Achado independente de 3 layers de code review (Blind Hunter, Edge Case Hunter, Acceptance Auditor), sem nenhum teste de 2 tenants simultâneos pra pegar antes. **Resolução:** `MODULE`/`MODULE_CLOSURE`/`RESOURCE` são GLOBAIS — estrutura de código compartilhada por toda a instalação (bate com a leitura literal de AD-6: `generate module` roda uma vez, insere "a linha", não uma por tenant). Isolamento multi-tenant vive só em `ROLE_ASSIGNMENT`/`USER`/`GROUP`/`ROLE` — a linha `TENANT ||--o{ MODULE` foi removida do diagrama acima. Mesmo padrão desta nota já usado pra reconciliação EdDSA→HS256 (Story 2.1, ver seção Stack).
 
 ## Capability → Architecture Map
 
