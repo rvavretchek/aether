@@ -113,49 +113,11 @@ If required framework configuration is missing: **HALT** with message "Run `fram
 
 ---
 
-### Tiered Knowledge Loading
+### Deterministic Knowledge Selection
 
-Load fragments based on their `tier` classification in `tea-index.csv`:
+The fragment list for this step is a closed set. Start empty, evaluate the complete conditions under **Load Knowledge Base Fragments**, and add every fragment from each matching list. A config flag opens a branch only when every stack, runner, package, and relevance condition on that branch also matches. Do not add fragments from tier labels, index descriptions, nearby mentions, general usefulness, or possible future need. Deduplicate while preserving the order below. Identical facts and config must produce an identical list.
 
-1. **Core tier** (always load): Foundational fragments required for this workflow
-2. **Extended tier** (load on-demand): Load when deeper analysis is needed or when the user's context requires it
-3. **Specialized tier** (load only when relevant): Load only when the specific use case matches (e.g., contract-testing only for microservices, email-auth only for email flows)
-
-> **Context Efficiency**: Loading only core fragments reduces context usage by 40-50% compared to loading all fragments.
-
-### Playwright Utils Loading Profiles
-
-**If `tea_use_playwright_utils` is enabled**, select the appropriate loading profile:
-
-- **API-only profile** (when `{detected_stack}` is `backend` or no `page.goto`/`page.locator` found in test files):
-  Load: `overview`, `api-request`, `auth-session`, `recurse` (~1,800 lines)
-
-- **Full UI+API profile** (when `{detected_stack}` is `frontend`/`fullstack` or browser tests detected):
-  Load: all Playwright Utils core fragments (~4,500 lines)
-
-- **Mobile profile** (when `{detected_stack}` is `mobile`):
-  Load: `mobile-test-strategy`, `maestro-flows`, `test-levels-framework`, `test-priorities-matrix`, `test-quality`, plus `overview`, `api-request`, `auth-session`, `recurse` for the app's HTTP boundary.
-  Do NOT load the browser fragments (`network-first`, `playwright-config`, `intercept-network-call`, `selector-resilience`): a device flow has no DOM and no request interceptor, and loading them invites browser patterns into a Maestro flow.
-
-**Detection**: Scan `{test_dir}` for files containing `page.goto` or `page.locator`. If none found, use API-only profile. A `maestro/` or `.maestro/` directory selects the mobile profile regardless of what `{test_dir}` holds.
-
-### Pact.js Utils Loading
-
-**If `tea_use_pactjs_utils` is enabled** (and `{detected_stack}` is `backend` or `fullstack`, or microservices indicators detected):
-
-Load: `pactjs-utils-overview.md`, `pactjs-utils-consumer-helpers.md`, `pactjs-utils-provider-verifier.md`, `pactjs-utils-request-filter.md` (~800 lines)
-
-**If `tea_use_pactjs_utils` is disabled** but contract testing is relevant (microservices architecture detected, existing Pact config found):
-
-Load: `contract-testing.md` (~960 lines)
-
-**Detection**: Scan `{project-root}` for Pact indicators: `pact/` directory, `@pact-foundation/pact` in `package.json`, `pactUrls` in test files, `PACT_BROKER` in env files.
-
-### Pact MCP Loading
-
-**If `tea_pact_mcp` is `"mcp"`:**
-
-Load: `pact-mcp.md` (~150 lines) — enables agent to use SmartBear MCP tools for fetching provider states and generating pact tests during automation.
+Contract testing is relevant only when repository facts show existing Pact artifacts, dependencies, configuration, or broker variables, or when the task explicitly requests contract testing. A service count or target-state architecture alone does not open a contract branch.
 
 ## 4. Load Knowledge Base Fragments
 
@@ -170,24 +132,33 @@ Use `{knowledgeIndex}` and load only what is required.
 - `ci-burn-in.md`
 - `test-quality.md`
 
-**Playwright Utils (if enabled):**
+**Mobile (if `{detected_stack}` is `mobile`):**
 
+- `mobile-test-strategy.md`
+- `maestro-flows.md`
+- `mobile-ci-device-lab.md`
+
+**Playwright Utils (if enabled, `@seontechnologies/playwright-utils` is in `package.json`, and the test files run on the Playwright runner):**
+
+- `playwright-utils-mandate.md` (load first — it governs how the fragments below are applied)
 - `overview.md`, `api-request.md`, `network-recorder.md`, `auth-session.md`, `intercept-network-call.md`, `recurse.md`, `log.md`, `file-utils.md`, `burn-in.md`, `network-error-monitor.md`, `fixtures-composition.md`
+- `fixture-architecture.md` and `network-first.md` for their principles only. Under the mandate the mechanism comes from the playwright-utils fragments: interception is `interceptNetworkCall` declared before `page.goto`, and composition is `mergeTests`.
 
-**Traditional Patterns (if Playwright Utils disabled):**
+**Traditional Patterns (if the Playwright Utils applicability gate above did not open and the test files run on the Playwright runner):**
 
 - `fixture-architecture.md`
 - `network-first.md`
 
-**Pact.js Utils (if enabled):**
+**Pact.js Utils (if enabled, `@seontechnologies/pactjs-utils` is in `package.json`, and contract testing is relevant):**
 
-- `pactjs-utils-overview.md`, `pactjs-utils-consumer-helpers.md`, `pactjs-utils-provider-verifier.md`, `pactjs-utils-request-filter.md`
+- `pactjs-utils-mandate.md` (load first — it governs how the fragments below are applied)
+- `pactjs-utils-overview.md`, `pactjs-utils-consumer-helpers.md`, `pactjs-utils-provider-verifier.md`, `pactjs-utils-request-filter.md`, `pactjs-utils-zod-to-pact.md`
 
-**Contract Testing (if pactjs-utils disabled but relevant):**
+**Contract Testing (if Pact.js Utils is disabled or not installed, and contract testing is relevant):**
 
 - `contract-testing.md`
 
-**Pact MCP (if tea_pact_mcp is "mcp"):**
+**Pact MCP (if tea_pact_mcp is "mcp" and contract testing is relevant):**
 
 - `pact-mcp.md`
 
@@ -197,7 +168,7 @@ Use `{knowledgeIndex}` and load only what is required.
 - `selector-resilience.md`
 - `timing-debugging.md`
 
-**Playwright CLI (if tea_browser_automation is "cli" or "auto"):**
+**Playwright CLI (if tea_browser_automation is "cli" or "auto" and the test files run on the Playwright runner):**
 
 - `playwright-cli.md`
 

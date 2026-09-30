@@ -70,7 +70,10 @@ const subagentContext = {
     use_playwright_utils: config.tea_use_playwright_utils,
     use_pactjs_utils: config.tea_use_pactjs_utils,
     pact_mcp: config.tea_pact_mcp,  // "mcp" | "none"
+    pact_mcp_reachable: /* from Step 1: the probe result, not the mode. `mcp` alone does not mean the tools are there */,
+    pact_fallback_source: /* from Step 1: 'broker' | 'provider-source' | 'openapi' | 'none' */,
     browser_automation: config.tea_browser_automation,  // "auto" | "cli" | "mcp" | "none"
+    playwright_utils_mandate: config.tea_use_playwright_utils === true,  // when true, workers MUST follow playwright-utils-mandate.md
     detected_stack: '{detected_stack}',  // "frontend" | "backend" | "fullstack"
     execution_mode: config.tea_execution_mode || 'auto',  // "auto" | "subagent" | "agent-team" | "sequential"
     capability_probe: parseBooleanFlag(config.tea_capability_probe, true),  // supports booleans and "false"/"true" strings
@@ -156,7 +159,7 @@ If probing is disabled, honor the requested mode strictly. If that mode cannot b
 
 Report selected mode before dispatch:
 
-```
+```text
 ⚙️ Execution Mode Resolution:
 - Requested: {requestedMode}
 - Probe Enabled: {probeEnabled}
@@ -188,6 +191,28 @@ When `resolvedMode` is `agent-team` or `subagent`, let the runtime decide concur
 
 ---
 
+### Playwright Utils Generation Contract
+
+When `use_playwright_utils` is `true`, every JavaScript/TypeScript worker dispatched below (3A API, 3B E2E, and 3B-backend when the service is Node/TypeScript on the Playwright runner) generates in the playwright-utils style by default. `playwright-utils-mandate.md` is the binding rule; pass it in `knowledge_fragments_loaded` and restate it in each worker's dispatch context.
+
+The non-negotiable substitutions:
+
+| Vanilla                                                  | Required instead                                    |
+| -------------------------------------------------------- | --------------------------------------------------- |
+| `page.route` / `page.waitForResponse` on an app endpoint | `interceptNetworkCall`                              |
+| `request.get/post/put/patch/delete`                      | `apiRequest`                                        |
+| `page.waitForTimeout`, bare `expect.poll`                | `recurse`                                           |
+| `console.log`                                            | `log.info` / `log.step`                             |
+| `import { test } from '@playwright/test'` in a spec      | `import { test } from '../support/merged-fixtures'` |
+
+`auth-session`, `network-recorder`, `webhook`, and `burn-in` are recommended rather than required: they need project wiring. Propose them and name the wiring; never silently emit the vanilla equivalent instead.
+
+This contract does not apply to Maestro flows (3B-mobile), Cypress suites, or backend suites in pytest, JUnit, Go test, xUnit, or RSpec.
+
+When `use_playwright_utils` is `false`, workers follow `fixture-architecture.md` and `network-first.md` for both principle and mechanism.
+
+---
+
 ### Contract Test Generation Note
 
 When `use_pactjs_utils` is enabled, the API test generation subagent (step-03a) also generates:
@@ -215,7 +240,7 @@ When `pact_mcp` is `"mcp"`, the subagent can use SmartBear MCP tools to fetch ex
 
 **System Action:**
 
-```
+```text
 🚀 Launching Subagent A: API Test Generation
 📝 Output: /tmp/tea-automate-api-tests-${timestamp}.json
 ⚙️ Mode: ${resolvedMode}
@@ -239,7 +264,7 @@ When `pact_mcp` is `"mcp"`, the subagent can use SmartBear MCP tools to fetch ex
 
 **System Action:**
 
-```
+```text
 🚀 Launching Subagent B: E2E Test Generation
 📝 Output: /tmp/tea-automate-e2e-tests-${timestamp}.json
 ⚙️ Mode: ${resolvedMode}
@@ -265,7 +290,7 @@ When `pact_mcp` is `"mcp"`, the subagent can use SmartBear MCP tools to fetch ex
 
 **System Action:**
 
-```
+```text
 🚀 Launching Subagent B-backend: Backend Test Generation
 📝 Output: /tmp/tea-automate-backend-tests-${timestamp}.json
 ⚙️ Mode: ${resolvedMode}
@@ -291,7 +316,7 @@ When `pact_mcp` is `"mcp"`, the subagent can use SmartBear MCP tools to fetch ex
 
 **System Action:**
 
-```
+```text
 🚀 Launching Subagent B-mobile: Mobile Test Generation
 📝 Output: /tmp/tea-automate-mobile-tests-${timestamp}.json
 ⚙️ Mode: ${resolvedMode}
@@ -306,7 +331,7 @@ When `pact_mcp` is `"mcp"`, the subagent can use SmartBear MCP tools to fetch ex
 
 **If `resolvedMode` is `agent-team` or `subagent`:**
 
-```
+```text
 ⏳ Waiting for subagents to complete...
   ├── Subagent A (API): Running... ⟳
   ├── Subagent B (E2E): Running... ⟳       [if frontend/fullstack]
@@ -324,7 +349,7 @@ When `pact_mcp` is `"mcp"`, the subagent can use SmartBear MCP tools to fetch ex
 
 **If `resolvedMode` is `sequential`:**
 
-```
+```text
 ✅ Sequential mode: each worker already completed during dispatch.
 ```
 
@@ -367,7 +392,7 @@ The aggregate step reads whichever output file(s) exist based on `{detected_stac
 
 **Display performance metrics:**
 
-```
+```text
 🚀 Performance Report:
 - Execution Mode: {resolvedMode}
 - Stack Type: {detected_stack}

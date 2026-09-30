@@ -9,6 +9,9 @@ inputDocuments: []
 # Test Quality Review: {test_filename}
 
 **Quality Score**: {score}/100 ({grade} - {assessment})
+**Raw Deduction Score**: {raw_score}/100
+**Score Cap**: {score_cap}/100
+**Score Override Rule**: {score_override_rule}
 **Review Date**: {YYYY-MM-DD}
 **Review Scope**: {single | directory | suite}
 **Reviewer**: {user_name or TEA Agent}
@@ -23,6 +26,7 @@ Coverage mapping and coverage gates are out of scope here. Use `trace` for cover
 **Overall Assessment**: {Excellent | Good | Acceptable | Needs Improvement | Critical Issues}
 
 **Recommendation**: {Approve | Approve with Comments | Request Changes | Block}
+**Verdict Rule**: {verdict_rule}
 
 <!-- COMPUTED, never chosen. steps-c/step-03f-aggregate-scores.md §3b derives this from the
      deduped violation counts: any CRITICAL => Block; any HIGH => Request Changes; score < 70 =>
@@ -36,6 +40,8 @@ Coverage mapping and coverage gates are out of scope here. Use `trace` for cover
 
 **Context Waivers Applied**: 0
 
+**Execution Mode**: {agent-team | subagent | sequential}
+
 <!-- What this review was judged against, resolved in step 1. `none` means no story, test design, or source accompanied the tests: the verdict speaks to how the tests are built, not to whether they match a requirement. -->
 
 <!-- Context can add findings and clarify impact. It cannot waive a rubric violation, change severity, or alter the score. This machine-readable value must remain 0. -->
@@ -48,9 +54,20 @@ Coverage mapping and coverage gates are out of scope here. Use `trace` for cover
 
 ### Key Weaknesses
 
-❌ {weakness_1}
-❌ {weakness_2}
-❌ {weakness_3}
+{Include this subsection only when scored findings exist. Copy only findings from
+`all_violations`, one bullet per finding, with its registry row. Never put optional
+improvements, out-of-scope coverage ideas, closed convention/applicability checks,
+empty placeholders, or `n/a` here.}
+
+❌ [{registry_row_id}] {scored_finding_summary}
+
+### Advisory Observations
+
+{Include this subsection only when useful unscored suggestions exist. These ideas
+do not affect the score or recommendation. Omit the subsection when empty; never
+render an empty bullet or `n/a`.}
+
+ℹ️ {unscored_optional_suggestion}
 
 ### Summary
 
@@ -72,8 +89,10 @@ Coverage mapping and coverage gates are out of scope here. Use `trace` for cover
 | Fixture Patterns                     | {✅ PASS \| ✅ PASS (n/a) \| ⚠️ WARN \| ❌ FAIL} | {count}    | {basis}  | {brief_note} |
 | Data Factories                       | {✅ PASS \| ✅ PASS (n/a) \| ⚠️ WARN \| ❌ FAIL} | {count}    | {basis}  | {brief_note} |
 | Network-First Pattern                | {✅ PASS \| ✅ PASS (n/a) \| ⚠️ WARN \| ❌ FAIL} | {count}    | {basis}  | {brief_note} |
+| Playwright Utils Adoption            | {✅ PASS \| ✅ PASS (n/a) \| ⚠️ WARN \| ❌ FAIL} | {count}    | {basis}  | {brief_note} |
+| Pact.js Utils Adoption               | {✅ PASS \| ✅ PASS (n/a) \| ⚠️ WARN \| ❌ FAIL} | {count}    | {basis}  | {brief_note} |
 | Explicit Assertions                  | {✅ PASS \| ⚠️ WARN \| ❌ FAIL}                  | {count}    | Absolute | {brief_note} |
-| Test Length (≤500 lines)             | {✅ PASS \| ⚠️ WARN \| ❌ FAIL}                  | {lines}    | Absolute | {brief_note} |
+| Test Length (≤1000 lines)            | {✅ PASS \| ⚠️ WARN \| ❌ FAIL}                  | {lines}    | Absolute | {brief_note} |
 | Test Duration (≤1.5 min)             | {✅ PASS \| ⚠️ WARN \| ❌ FAIL}                  | {duration} | Absolute | {brief_note} |
 | Flakiness Patterns                   | {✅ PASS \| ✅ PASS (n/a) \| ⚠️ WARN \| ❌ FAIL} | {count}    | {basis}  | {brief_note} |
 
@@ -104,7 +123,7 @@ Coverage mapping and coverage gates are out of scope here. Use `trace` for cover
 
 ## Quality Score Breakdown
 
-```
+```text
 Starting Score:          100
 Critical Violations:     -{critical_count} × 10 = -{critical_deduction}
 High Violations:         -{high_count} × 5 = -{high_deduction}
@@ -121,15 +140,19 @@ Bonus Points:
                          --------
 Total Bonus:             +{bonus_total}
 
-Final Score:             {final_score}/100
+Raw Deduction Score:     {raw_score}/100
+Score Cap:               {score_cap}/100 ({highest_severity_or_none})
+Effective Score:         {final_score}/100
 Grade:                   {grade}
 ```
 
 <!-- This ledger is the workflow's only scoring model (see steps-c/step-03f-aggregate-scores.md).
      Every bonus line is 0 or 5, never a partial value, and the six categories above are the
      complete set. {grade} is exactly one of A, B, C, D, F, with no modifier such as A+ or B-.
-     The lines above must sum to {final_score}, which must equal the **Quality Score** line;
-     headless runners compute the authoritative result and normalize score and grade fields. -->
+     The deduction lines and bonus must sum to {raw_score}. The highest finding severity caps
+     that raw score at Critical 69, High 79, Medium 89, or Low 99; no findings use cap 100.
+     {final_score} is min(raw score, cap), must equal the **Quality Score** line, and determines
+     the grade. Headless runners compute and normalize all score and grade fields. -->
 
 ---
 
@@ -146,6 +169,7 @@ Grade:                   {grade}
 **Severity**: P0 (Critical)
 **Location**: `{filename}:{line_number}`
 **Row**: {registry_row_id}
+**Provenance**: {introduced | modified | pre_existing; omit when changed-line evidence is unavailable}
 **Criterion**: {criterion_name}
 **Knowledge Base**: [{fragment_name}]({fragment_path})
 
@@ -189,6 +213,7 @@ Grade:                   {grade}
 **Severity**: {P1 (High) | P2 (Medium) | P3 (Low)}
 **Location**: `{filename}:{line_number}`
 **Row**: {registry_row_id}
+**Provenance**: {introduced | modified | pre_existing; omit when changed-line evidence is unavailable}
 **Criterion**: {criterion_name}
 **Knowledge Base**: [{fragment_name}]({fragment_path})
 
@@ -311,7 +336,7 @@ Grade:                   {grade}
 
 This review consulted the following knowledge base fragments:
 
-- **[test-quality.md](../../../agents/bmad-tea/resources/knowledge/test-quality.md)** - Definition of Done for tests (no hard waits, ≤500 lines, <1.5 min, self-cleaning)
+- **[test-quality.md](../../../agents/bmad-tea/resources/knowledge/test-quality.md)** - Definition of Done for tests (no hard waits, ≤1000 lines, <1.5 min, self-cleaning)
 - **[fixture-architecture.md](../../../agents/bmad-tea/resources/knowledge/fixture-architecture.md)** - Pure function → Fixture → mergeTests pattern
 - **[network-first.md](../../../agents/bmad-tea/resources/knowledge/network-first.md)** - Route intercept before navigate (race condition prevention)
 - **[data-factories.md](../../../agents/bmad-tea/resources/knowledge/data-factories.md)** - Factory functions with overrides, API-first setup

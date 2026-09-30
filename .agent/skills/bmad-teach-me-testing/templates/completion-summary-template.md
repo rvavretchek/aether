@@ -14,7 +14,7 @@ average_score: { { average_score } }
 
 ## {{user_name}}'s Learning Journey
 
-**{{user_name}} completed the TEA Academy testing curriculum**
+**{{user_name}} completed the TEA Academy testing curriculum.**
 
 ---
 
@@ -50,13 +50,13 @@ average_score: { { average_score } }
 - ✅ **Test Design:** Risk assessment, coverage planning, P0-P3 prioritization
 - ✅ **Test Development:** ATDD red-green approach, test automation
 - ✅ **Quality Assurance:** Test review, traceability, NFR evidence audit
-- ✅ **Advanced Techniques:** 42 knowledge fragments explored
+- ✅ **Advanced Techniques:** 59 knowledge fragments explored
 
 ---
 
 ### Learning Artifacts
 
-All session notes and progress tracking available at:
+Session notes are available at:
 `{{artifacts_path}}`
 
 ---
