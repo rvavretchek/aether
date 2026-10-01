@@ -1,6 +1,7 @@
 import { resolve } from 'node:path';
 import { runNew } from './commands/new.js';
 import { runMigrate } from './commands/migrate.js';
+import { runGenerateModule } from './commands/generate-module.js';
 
 export async function main(argv: string[]): Promise<number> {
   const [command, ...rest] = argv;
@@ -41,8 +42,43 @@ export async function main(argv: string[]): Promise<number> {
     return 0;
   }
 
+  if (command === 'generate') {
+    const [type, ...names] = rest;
+
+    if (type !== 'module') {
+      console.error(
+        `Tipo de \`generate\` não suportado: "${type ?? ''}". Tipos disponíveis: module.`,
+      );
+      return 1;
+    }
+
+    if (names.length === 0) {
+      console.error('Uso: aether-admin generate module <nome...>');
+      return 1;
+    }
+
+    const result = await runGenerateModule(process.cwd(), names);
+
+    if (!result.ok) {
+      console.error(result.error);
+      return 1;
+    }
+
+    let anyFailed = false;
+    for (const nameResult of result.results) {
+      if (nameResult.ok) {
+        console.log(`Módulo "${nameResult.name}" gerado.`);
+      } else {
+        console.error(`Módulo "${nameResult.name}": ${nameResult.error}`);
+        anyFailed = true;
+      }
+    }
+
+    return anyFailed ? 1 : 0;
+  }
+
   console.error(
-    `Comando desconhecido: "${command ?? ''}". Comandos disponíveis: new, migrate.`,
+    `Comando desconhecido: "${command ?? ''}". Comandos disponíveis: new, migrate, generate.`,
   );
   return 1;
 }

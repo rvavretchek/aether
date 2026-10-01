@@ -1,6 +1,5 @@
-import { access } from 'node:fs/promises';
-import { join } from 'node:path';
 import { runCommand } from '../run-command.js';
+import { checkIsAetherProject } from '../is-aether-project.js';
 
 async function defaultRunMigrateDeploy(targetDir: string): Promise<void> {
   // `prisma migrate deploy`, não `migrate dev` — aplica só o que já está em
@@ -33,25 +32,9 @@ export async function runMigrate(
 ): Promise<RunMigrateResult> {
   const runMigrateDeploy = options.runMigrateDeploy ?? defaultRunMigrateDeploy;
 
-  try {
-    await access(join(targetDir, 'packages/db/schema.prisma'));
-  } catch (error) {
-    // Só ENOENT (arquivo/diretório ausente) vira a mensagem "não é um projeto
-    // Aether" — qualquer outra causa (EACCES, etc.) propaga a real, senão um
-    // problema de permissão num projeto válido fica mascarado como "projeto
-    // errado" (achado do code review, mesma causa raiz da AC #4 aplicada um
-    // passo antes de `runMigrateDeploy`).
-    if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
-      return {
-        ok: false,
-        error: `"${targetDir}" não parece um projeto Aether — packages/db/schema.prisma não encontrado. Rode a partir da raiz de um projeto gerado por \`aether-admin new\`.`,
-      };
-    }
-    const message = error instanceof Error ? error.message : String(error);
-    return {
-      ok: false,
-      error: `Falha ao verificar "${targetDir}": ${message}`,
-    };
+  const projectCheck = await checkIsAetherProject(targetDir);
+  if (!projectCheck.ok) {
+    return projectCheck;
   }
 
   try {
