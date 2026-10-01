@@ -8,6 +8,7 @@ describe('buildModuleModelFragment', () => {
     expect(fragment).toContain('model Pedidos {');
     expect(fragment).toContain('tenantId  String   @map("tenant_id")');
     expect(fragment).toContain('name      String');
+    expect(fragment).toContain('@@index([tenantId])');
     expect(fragment).toContain('@@map("pedidos")');
     expect(fragment).not.toContain('@relation');
   });

@@ -10,9 +10,19 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-const { runMigrateMock } = vi.hoisted(() => ({ runMigrateMock: vi.fn() }));
+const { runMigrateMock, runCommandMock } = vi.hoisted(() => ({
+  runMigrateMock: vi.fn(),
+  runCommandMock: vi.fn(),
+}));
 
 vi.mock('./migrate.js', () => ({ runMigrate: runMigrateMock }));
+// Mockado só pra capturar os comandos reais que `defaultFormatGeneratedCode`/
+// `defaultGeneratePrismaClient` disparam quando NENHUM override é passado —
+// achado do retro do Épico 3: todo outro teste deste arquivo sobrescreve as
+// duas funções via `options`, então a string de comando real nunca era
+// exercitada (mesmo formato de ponto cego que já causou o bug real do `prisma
+// generate` ausente). Mesmo padrão de `migrate.test.ts` pro comando de migrate.
+vi.mock('../run-command.js', () => ({ runCommand: runCommandMock }));
 
 const { runGenerateModule } = await import('./generate-module.js');
 
@@ -66,6 +76,8 @@ async function makeFakeAetherProject(): Promise<string> {
 beforeEach(() => {
   runMigrateMock.mockReset();
   runMigrateMock.mockResolvedValue({ ok: true });
+  runCommandMock.mockReset();
+  runCommandMock.mockResolvedValue(undefined);
 });
 
 afterEach(async () => {
@@ -75,6 +87,25 @@ afterEach(async () => {
 });
 
 describe('runGenerateModule (integração real do default, migrate mockado)', () => {
+  it('path default (sem options de formatGeneratedCode/generatePrismaClient) roda exatamente `pnpm exec prettier --write .` e `pnpm --filter db run generate` via runCommand', async () => {
+    const targetDir = await makeFakeAetherProject();
+
+    const result = await runGenerateModule(targetDir, ['pedidos']);
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.results[0]).toEqual({ name: 'pedidos', ok: true });
+    }
+    expect(runCommandMock).toHaveBeenCalledWith(
+      'pnpm exec prettier --write .',
+      targetDir,
+    );
+    expect(runCommandMock).toHaveBeenCalledWith(
+      'pnpm --filter db run generate',
+      targetDir,
+    );
+  });
+
   it('gera um módulo completo: schema, shared schema, arquivos hexagonais, root-router, migration, e chama runMigrate', async () => {
     const targetDir = await makeFakeAetherProject();
 

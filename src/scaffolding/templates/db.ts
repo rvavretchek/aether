@@ -590,9 +590,14 @@ export function buildDbFiles(): Record<string, string> {
     // dado de tenant — reconciliação pós-review da Story 3.1) — mas isso é garantido
     // por quem CHAMA a extensão (core/authz consulta Module/Resource via o client cru,
     // nunca via forTenant), não pelo `$allModels` em si, que intercepta por operação,
-    // não por model específico. Cobre só as operações que os consumidores reais usam
-    // até agora (findMany/findFirst) — create/update/delete ficam pra quando um
-    // consumidor real precisar. Isso não cobre filtros relacionais aninhados (ex.:
+    // não por model específico. Cobre toda operação que aceita `where`
+    // (findMany/findFirst/findUnique/update/updateMany/delete/deleteMany/upsert) —
+    // achado real do retro do Épico 3: a versão original só cobria findMany/findFirst,
+    // e a AD-5 promete isolamento pra "todo acesso", sem qualificar como só-leitura; o
+    // primeiro `update`/`delete` que um repository.ts editado à mão viesse a usar
+    // ficaria sem proteção nenhuma contra acesso cross-tenant. `create` fica de fora de
+    // propósito — não tem `where` (o repository.ts gerado já passa `tenantId`
+    // explicitamente em `data`, ver module-files.ts). Isso não cobre filtros relacionais aninhados (ex.:
     // `role: {...}`/`group: {...}` dentro de um roleAssignment.findFirst) — só
     // RoleAssignment.tenantId é de fato verificado nesses casos; deferred no code review
     // da Story 3.1 (não explorável hoje, nada escreve RoleAssignment cross-tenant).
@@ -613,9 +618,18 @@ export function buildDbFiles(): Record<string, string> {
       '// `$allModels` verificado empiricamente contra @prisma/client 7.10.0 real',
       '// (Story 3.3) — cobre qualquer model presente e futuro. `args` dentro do handler',
       '// é uma união de TODOS os tipos de args de TODOS os models (Prisma não consegue',
-      '// estreitar pro model específico sendo chamado) — o cast abaixo é necessário e',
-      '// fica contido aqui dentro; já confirmado que NÃO vaza pro chamador (',
-      '// `db.<model>.findMany(...)` continua tipado especificamente pro model real).',
+      '// estreitar pro model específico sendo chamado) — o cast de entrada',
+      '// (`as WithWhere`, pra poder chamar `injectTenant` genericamente) é sempre',
+      '// necessário. Um segundo cast na SAÍDA (`as typeof args`) só é necessário pra',
+      '// `findUnique`/`update`/`updateMany`/`delete`/`upsert` — esses exigem campos',
+      '// obrigatórios (`data`, `create`/`update`, `where` com forma `WhereUniqueInput`)',
+      '// que o tipo genérico de retorno de `injectTenant` não consegue expressar;',
+      '// `findMany`/`findFirst`/`deleteMany` usam `WhereInput` (solto, sem campo',
+      '// obrigatório extra) e já tipam certo sem o segundo cast — adicioná-lo ali',
+      '// vira erro de lint (`no-unnecessary-type-assertion`), achado real rodando',
+      '// `tsc --build`/`eslint` contra um projeto regenerado (retro do Épico 3).',
+      '// Nenhum cast vaza pro chamador — confirmado: `db.<model>.findMany(...)`',
+      '// continua tipado especificamente pro model real.',
       'interface WithWhere {',
       '  where?: Record<string, unknown>;',
       '}',
@@ -629,6 +643,24 @@ export function buildDbFiles(): Record<string, string> {
       '        },',
       '        async findFirst({ args, query }) {',
       '          return query(injectTenant(args as WithWhere, tenantId));',
+      '        },',
+      '        async findUnique({ args, query }) {',
+      '          return query(injectTenant(args as WithWhere, tenantId) as typeof args);',
+      '        },',
+      '        async update({ args, query }) {',
+      '          return query(injectTenant(args as WithWhere, tenantId) as typeof args);',
+      '        },',
+      '        async updateMany({ args, query }) {',
+      '          return query(injectTenant(args as WithWhere, tenantId) as typeof args);',
+      '        },',
+      '        async delete({ args, query }) {',
+      '          return query(injectTenant(args as WithWhere, tenantId) as typeof args);',
+      '        },',
+      '        async deleteMany({ args, query }) {',
+      '          return query(injectTenant(args as WithWhere, tenantId));',
+      '        },',
+      '        async upsert({ args, query }) {',
+      '          return query(injectTenant(args as WithWhere, tenantId) as typeof args);',
       '        },',
       '      },',
       '    },',

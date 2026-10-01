@@ -17,6 +17,14 @@ describe('buildModuleMigrationSql', () => {
     expect(sql).toContain('CONSTRAINT "pedidos_pkey" PRIMARY KEY ("id")');
   });
 
+  it('cria índice em tenant_id (achado do retro do Épico 3 — list() filtra por tenant via forTenant)', () => {
+    const sql = buildModuleMigrationSql('pedidos', 'pedidos', ids);
+
+    expect(sql).toContain(
+      'CREATE INDEX "pedidos_tenant_id_idx" ON "pedidos"("tenant_id");',
+    );
+  });
+
   it('insere a linha de Module com o id recebido', () => {
     const sql = buildModuleMigrationSql('pedidos', 'pedidos', ids);
 
