@@ -9,6 +9,7 @@ import { buildWebFiles } from './templates/web.js';
 import { buildSharedFiles } from './templates/shared.js';
 import { buildDbFiles } from './templates/db.js';
 import { buildDockerFiles } from './templates/docker.js';
+import { buildNotificationFiles } from './templates/notifications.js';
 
 function prefixKeys(
   prefix: string,
@@ -36,6 +37,7 @@ export async function writeStructuralSeed(
     ...prefixKeys('apps/api', buildAuthFiles()),
     ...prefixKeys('apps/api', buildRateLimitFiles()),
     ...prefixKeys('apps/api', buildAuthzFiles()),
+    ...prefixKeys('apps/api', buildNotificationFiles()),
     ...prefixKeys('apps/web', buildWebFiles(projectName)),
     ...prefixKeys('packages/shared', buildSharedFiles()),
     ...prefixKeys('packages/db', buildDbFiles()),

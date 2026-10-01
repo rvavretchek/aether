@@ -249,6 +249,8 @@ export function buildRootFiles(projectName: string): Record<string, string> {
       'WEB_PORT=5173',
       'MAILPIT_SMTP_PORT=1025',
       'MAILPIT_UI_PORT=8025',
+      'SMTP_HOST=localhost',
+      'EMAIL_FROM=no-reply@aether.local',
       '',
       '# Vite só expõe pro código do cliente variáveis com prefixo VITE_ — duplicata',
       '# proposital de API_PORT, não um valor diferente (achado do code review, AC #7:',
