@@ -83,6 +83,10 @@ export function buildDbFiles(): Record<string, string> {
       '  tenantId     String   @map("tenant_id")',
       '  email        String',
       '  passwordHash String   @map("password_hash")',
+      '  // Admin é escopado ao PRÓPRIO tenant — nunca um superusuário cross-tenant',
+      '  // (Story 5.1). Propaga via claim no JWT (login emite, refresh re-deriva',
+      '  // fresco daqui), nunca consultado a cada request autenticado comum.',
+      '  isAdmin      Boolean  @default(false) @map("is_admin")',
       '  createdAt    DateTime @default(now()) @map("created_at")',
       '  updatedAt    DateTime @updatedAt @map("updated_at")',
       '',
@@ -610,6 +614,17 @@ export function buildDbFiles(): Record<string, string> {
       '',
       '-- AddForeignKey',
       'ALTER TABLE "password_reset_tokens" ADD CONSTRAINT "password_reset_tokens_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;',
+      '',
+    ].join('\n'),
+
+    // Migration incremental pra User.isAdmin (Story 5.1, FR-14) — ALTER TABLE simples,
+    // mesma convenção DDL já usada. Timestamp 20261002000100 (não 20261003...) —
+    // mesmo dia da migration anterior (20261002000000, Story 4.2), só 100s depois pra
+    // não colidir (achado do code review: a primeira versão datava um dia adiante da
+    // data real em que foi escrita).
+    'migrations/20261002000100_add_user_is_admin/migration.sql': [
+      '-- AlterTable',
+      'ALTER TABLE "users" ADD COLUMN "is_admin" BOOLEAN NOT NULL DEFAULT false;',
       '',
     ].join('\n'),
 

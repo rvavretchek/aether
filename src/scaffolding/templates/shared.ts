@@ -88,6 +88,34 @@ export function buildSharedFiles(): Record<string, string> {
       '',
     ].join('\n'),
 
+    // Fonte única dos schemas de admin.users.* (AD-3, Story 5.1) — importados por
+    // apps/api e, no futuro, pelas telas de admin (apps/web) quando existirem.
+    'src/schemas/admin.ts': [
+      "import { z } from 'zod';",
+      '',
+      'export const listUsersOutputSchema = z.array(',
+      '  z.object({',
+      '    id: z.string(),',
+      '    email: z.string(),',
+      '    isAdmin: z.boolean(),',
+      '    createdAt: z.coerce.date(),',
+      '  }),',
+      ');',
+      '',
+      '// Mesmas regras de email já usadas em requestPasswordResetInputSchema — sem',
+      '// senha no input (Story 5.1, AC #5): o próprio create() nunca aceita uma',
+      '// senha, o usuário configura a sua via o email account-setup.',
+      'export const createUserInputSchema = z.object({',
+      '  email: z.string().trim().toLowerCase().email(),',
+      '});',
+      '',
+      'export const updateUserInputSchema = z.object({',
+      '  userId: z.string().min(1),',
+      '  email: z.string().trim().toLowerCase().email(),',
+      '});',
+      '',
+    ].join('\n'),
+
     'src/schemas/system.ts': [
       "import { z } from 'zod';",
       '',

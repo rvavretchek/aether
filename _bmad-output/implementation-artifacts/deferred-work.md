@@ -51,6 +51,10 @@
 - **`AuthProvider.setPassword` lançaria um erro de Prisma não tratado (não o `BAD_REQUEST` genérico) se o `User` fosse deletado entre `requestPasswordReset` e `resetPassword` consumir o token** — inalcançável hoje, nenhum código deste projeto deleta `User` ainda; revisitar quando um fluxo de exclusão de usuário existir (Epic 5/admin), auditando todas as implicações de FK/token órfão de uma vez, não só esta. [src/scaffolding/templates/auth.ts#argon2-auth-provider.ts]
 - **Risco residual de timing entre "email existe" e "email não existe" em `requestPasswordReset`** — mesmo depois do patch que impede a DIVERGÊNCIA DE ERRO (Mailpit fora do ar não mais faz um caminho responder 500 e o outro sucesso), o caminho "email existe" ainda faz mais trabalho (grava token + envia email) antes de responder, uma diferença de timing mensurável. Aceito como risco residual padrão de mercado pra este tipo de defesa — eliminar por completo exigiria trabalho desproporcional ao ganho (ex.: atraso artificial calibrado, complexidade nova sem benefício demonstrado hoje). [src/scaffolding/templates/auth.ts#router.ts, requestPasswordReset]
 
+## Deferred from: code review of 5-1-admin-users-backend (2026-10-02)
+
+- **Nenhuma procedure permite promover o primeiro admin de um tenant** — `admin.users.*` todo protegido por `requireAdmin`, mas não existe nenhum caminho de produto pra criar o PRIMEIRO admin (bootstrap). Já documentado nos Dev Notes da própria story como corte de escopo explícito e aprovado pelo Boss; SQL direto (`UPDATE users SET is_admin = true`) aceito como infra de teste pra validação real (Task 8), nunca como caminho de produto. Lacuna real de produto pra uma story futura (seed inicial de Tenant, ou um comando `aether-admin`). [src/scaffolding/templates/admin.ts]
+
 ## Resolved (não mais deferido)
 
 - ~~`AuthProvider.verifyToken` (AC #10, Zero Trust) adiado formalmente pra Epic 3~~ — **resolvido pela Story 3.1** (2026-09-04): `verifyToken` implementado, `ctx.user` populado a partir do header `Authorization: Bearer`, primeiro consumidor real é o middleware `requireResource`.
