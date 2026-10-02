@@ -247,6 +247,7 @@ export function buildRootFiles(projectName: string): Record<string, string> {
       'DATABASE_URL="postgresql://aether_dev:aether_dev_password@localhost:5432/aether_dev"',
       'API_PORT=3001',
       'WEB_PORT=5173',
+      'WEB_PUBLIC_URL=http://localhost:5173',
       'MAILPIT_SMTP_PORT=1025',
       'MAILPIT_UI_PORT=8025',
       'SMTP_HOST=localhost',

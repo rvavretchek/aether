@@ -97,6 +97,7 @@ describe('writeStructuralSeed', () => {
       'packages/db/migrations/20260901000000_init_auth/migration.sql',
       'packages/db/migrations/20260902000000_add_rate_limit_hit/migration.sql',
       'packages/db/migrations/20260904000000_add_identity_tree/migration.sql',
+      'packages/db/migrations/20261002000000_add_password_reset_token/migration.sql',
       'docker/docker-compose.dev.yml',
       'docker/Dockerfile.dev',
     ];
@@ -201,6 +202,20 @@ describe('writeStructuralSeed', () => {
     expect(schema).toContain('depth        Int');
     // Resource.name único globalmente (AD-7) — não escopado por tenant
     expect(schema).toContain('name     String       @unique');
+  });
+
+  it('packages/db/schema.prisma has PasswordResetToken, unique token_hash, nullable used_at (Story 4.2, FR-19/FR-9)', async () => {
+    const targetDir = await makeTempDir();
+
+    await writeStructuralSeed(targetDir, 'my-app');
+
+    const schema = await readFile(
+      join(targetDir, 'packages/db/schema.prisma'),
+      'utf-8',
+    );
+    expect(schema).toMatch(/model\s+PasswordResetToken\s*\{/);
+    expect(schema).toContain('tokenHash String    @unique @map("token_hash")');
+    expect(schema).toContain('usedAt    DateTime? @map("used_at")');
   });
 
   it('pre-approves the esbuild build script in pnpm-workspace.yaml — otherwise `pnpm install` fails with ERR_PNPM_IGNORED_BUILDS on pnpm 11 (verified against a real install)', async () => {
