@@ -114,6 +114,12 @@ export function buildSharedFiles(): Record<string, string> {
       '  email: z.string().trim().toLowerCase().email(),',
       '});',
       '',
+      '// Story 5.2 — reaproveita TokenRevocationStore.revokeAllForUser (Story 2.1/4.2)',
+      '// sem modificação; a procedure é que confirma posse do tenant antes de chamar.',
+      'export const revokeSessionsInputSchema = z.object({',
+      '  userId: z.string().min(1),',
+      '});',
+      '',
     ].join('\n'),
 
     'src/schemas/system.ts': [

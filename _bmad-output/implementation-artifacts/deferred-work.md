@@ -55,6 +55,10 @@
 
 - **Nenhuma procedure permite promover o primeiro admin de um tenant** — `admin.users.*` todo protegido por `requireAdmin`, mas não existe nenhum caminho de produto pra criar o PRIMEIRO admin (bootstrap). Já documentado nos Dev Notes da própria story como corte de escopo explícito e aprovado pelo Boss; SQL direto (`UPDATE users SET is_admin = true`) aceito como infra de teste pra validação real (Task 8), nunca como caminho de produto. Lacuna real de produto pra uma story futura (seed inicial de Tenant, ou um comando `aether-admin`). [src/scaffolding/templates/admin.ts]
 
+## Deferred from: code review of 5-2-revoke-sessions (2026-10-02)
+
+- **Nenhuma ação sensível de admin gera log de auditoria** — `admin.users.revokeSessions` (e, retroativamente, `create`/`update` da Story 5.1) não registram quem fez o quê, quando, sobre qual Usuário. Nenhuma infraestrutura de audit log existe em nenhuma story até agora; gap de produto real, mas é uma decisão de arquitetura própria (nova tabela/mecanismo), não algo pra resolver dentro de uma story pontual de CRUD. [src/scaffolding/templates/admin.ts]
+
 ## Resolved (não mais deferido)
 
 - ~~`AuthProvider.verifyToken` (AC #10, Zero Trust) adiado formalmente pra Epic 3~~ — **resolvido pela Story 3.1** (2026-09-04): `verifyToken` implementado, `ctx.user` populado a partir do header `Authorization: Bearer`, primeiro consumidor real é o middleware `requireResource`.
