@@ -61,7 +61,7 @@
 
 ## Deferred from: code review of 5-3-groups-crud-backend (2026-10-05)
 
-- **Nenhum teste prova rejeição de `name` vazio/só-espaços em `admin.users.create`/`update`/`groups.create`/`update`** — a validação Zod (`.trim().min(1)`) existe e funciona, mas nenhum teste exercita esse caminho explicitamente em nenhuma das duas entidades. Convenção pré-existente desde a Story 5.1 (não introduzida pela 5.3); revisitar as duas juntas se algum dia for endereçado. [src/scaffolding/templates/admin.ts]
+- **Nenhum teste prova rejeição de `name` vazio/só-espaços/excedendo `.max()`, nem que `.trim()` persiste sem espaços, em `admin.users.create`/`update`/`groups.create`/`update`/`roles.create`/`update`** — a validação Zod existe e funciona, mas nenhum teste exercita esses caminhos explicitamente em nenhuma das três entidades (achado ampliado pelo code review da Story 5.4, que generalizou este item antes restrito a `users`/`groups`). Convenção pré-existente desde a Story 5.1; revisitar as três juntas se algum dia for endereçado. [src/scaffolding/templates/admin.ts]
 
 ## Resolved (não mais deferido)
 
