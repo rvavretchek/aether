@@ -59,6 +59,10 @@
 
 - **Nenhuma ação sensível de admin gera log de auditoria** — `admin.users.revokeSessions` (e, retroativamente, `create`/`update` da Story 5.1) não registram quem fez o quê, quando, sobre qual Usuário. Nenhuma infraestrutura de audit log existe em nenhuma story até agora; gap de produto real, mas é uma decisão de arquitetura própria (nova tabela/mecanismo), não algo pra resolver dentro de uma story pontual de CRUD. [src/scaffolding/templates/admin.ts]
 
+## Deferred from: code review of 5-3-groups-crud-backend (2026-10-05)
+
+- **Nenhum teste prova rejeição de `name` vazio/só-espaços em `admin.users.create`/`update`/`groups.create`/`update`** — a validação Zod (`.trim().min(1)`) existe e funciona, mas nenhum teste exercita esse caminho explicitamente em nenhuma das duas entidades. Convenção pré-existente desde a Story 5.1 (não introduzida pela 5.3); revisitar as duas juntas se algum dia for endereçado. [src/scaffolding/templates/admin.ts]
+
 ## Resolved (não mais deferido)
 
 - ~~`AuthProvider.verifyToken` (AC #10, Zero Trust) adiado formalmente pra Epic 3~~ — **resolvido pela Story 3.1** (2026-09-04): `verifyToken` implementado, `ctx.user` populado a partir do header `Authorization: Bearer`, primeiro consumidor real é o middleware `requireResource`.
