@@ -63,6 +63,10 @@
 
 - **Nenhum teste prova rejeição de `name` vazio/só-espaços/excedendo `.max()`, nem que `.trim()` persiste sem espaços, em `admin.users.create`/`update`/`groups.create`/`update`/`roles.create`/`update`** — a validação Zod existe e funciona, mas nenhum teste exercita esses caminhos explicitamente em nenhuma das três entidades (achado ampliado pelo code review da Story 5.4, que generalizou este item antes restrito a `users`/`groups`). Convenção pré-existente desde a Story 5.1; revisitar as três juntas se algum dia for endereçado. [src/scaffolding/templates/admin.ts]
 
+## Deferred from: code review of 5-5-role-assignments-backend (2026-10-05)
+
+- **TOCTOU entre as checagens de existência (Role/assignee/Module) e `roleAssignments.create`'s escrita em si** — se qualquer uma das três entidades for deletada por uma request concorrente no intervalo entre a checagem e o `db.roleAssignment.create()`, o `P2003` da FK vaza não mapeado em vez de `NOT_FOUND`. Mesma classe de risco residual já aceita em outras stories (ex.: Story 3.2, `migrate.ts`) — ferramenta de uso interativo por um único admin, janela de corrida exige uma segunda request concorrente no exato intervalo. [src/scaffolding/templates/admin.ts]
+
 ## Resolved (não mais deferido)
 
 - ~~`AuthProvider.verifyToken` (AC #10, Zero Trust) adiado formalmente pra Epic 3~~ — **resolvido pela Story 3.1** (2026-09-04): `verifyToken` implementado, `ctx.user` populado a partir do header `Authorization: Bearer`, primeiro consumidor real é o middleware `requireResource`.
