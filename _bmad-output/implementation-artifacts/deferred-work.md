@@ -67,6 +67,10 @@
 
 - **TOCTOU entre as checagens de existência (Role/assignee/Module) e `roleAssignments.create`'s escrita em si** — se qualquer uma das três entidades for deletada por uma request concorrente no intervalo entre a checagem e o `db.roleAssignment.create()`, o `P2003` da FK vaza não mapeado em vez de `NOT_FOUND`. Mesma classe de risco residual já aceita em outras stories (ex.: Story 3.2, `migrate.ts`) — ferramenta de uso interativo por um único admin, janela de corrida exige uma segunda request concorrente no exato intervalo. [src/scaffolding/templates/admin.ts]
 
+## Deferred from: code review of 5-6-group-membership-backend (2026-10-06)
+
+- **TOCTOU entre a checagem de existência do `User` e o `connect`/`disconnect` aninhado dentro de `group.update()` em `addMember`/`removeMember`** — se o `User` for deletado nesse intervalo, o `P2025` resultante é mapeado pra "Grupo não encontrado" (mensagem errada — o grupo existe, o usuário é que desapareceu). Mesma classe de risco residual já aceita em outras stories (Story 3.2 `migrate.ts`, Story 5.5) — ferramenta de uso interativo por um único admin, janela de corrida exige uma segunda request concorrente no exato intervalo. [src/scaffolding/templates/admin.ts]
+
 ## Resolved (não mais deferido)
 
 - ~~`AuthProvider.verifyToken` (AC #10, Zero Trust) adiado formalmente pra Epic 3~~ — **resolvido pela Story 3.1** (2026-09-04): `verifyToken` implementado, `ctx.user` populado a partir do header `Authorization: Bearer`, primeiro consumidor real é o middleware `requireResource`.
