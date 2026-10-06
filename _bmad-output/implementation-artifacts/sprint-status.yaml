@@ -41,7 +41,7 @@
 # - Retrospective appends its action items to action_items; sprint-status surfaces open ones
 
 generated: 2026-08-27
-last_updated: 10-06-2026 12:35
+last_updated: 10-06-2026 16:00
 project: Aether
 project_key: NOKEY
 tracking_system: file-system
@@ -75,6 +75,7 @@ development_status:
   5-4-roles-crud-backend: done
   5-5-role-assignments-backend: done
   5-6-group-membership-backend: done
+  5-7-role-resources-backend: done
   epic-5-retrospective: optional
 action_items:
   - id: "epic-3-retro-item-1-construir-um-harness-reutilizavel-de-val"
