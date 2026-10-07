@@ -75,6 +75,11 @@
 
 - **TOCTOU entre `assertResourceExists` e o `connect`/`disconnect` aninhado dentro de `updateRoleResources`** — se o `Resource` for deletado nesse intervalo, o erro seria mapeado pra "Papel não encontrado" em vez do motivo real. Mesma classe de risco residual já aceita nas Stories 5.5/5.6; aqui ainda mais fraca na prática, já que nenhuma story até agora implementa exclusão de `Resource` — o caminho é literalmente inalcançável hoje. [src/scaffolding/templates/admin.ts]
 
+## Deferred from: code review of 5-8-bulk-user-import (2026-10-07)
+
+- **TOCTOU entre a validação Zod do email de uma linha do CSV e `createUserWithSetupEmail`'s próprio `db.user.create()`** — mesma classe de risco residual já aceita nas Stories 5.5/5.6/5.7 (janela de corrida exige uma segunda request concorrente no exato intervalo); aqui coberta de qualquer forma pelo catch de `isDuplicateEmailError` dentro do próprio helper (vira `'duplicate'`, nunca um 500 não mapeado). [src/scaffolding/templates/admin.ts]
+- **Processos `tsx`/`server.ts` órfãos de validações manuais anteriores (Stories 5.3-5.7) encontrados ainda rodando no container `aether-api` do Laboratório Integrit**, apontando pra diretórios já removidos (`/app-5-3` a `/app-5-7`) — o "servidor finalizado" relatado no Debug Log de cada uma daquelas stories só encerrou a sessão SSH que o iniciou (`nohup ... &`), nunca o processo em si. Encerrados manualmente durante a validação desta story. Sugestão de ação futura (não bloqueante): um harness de validação reutilizável (já um action item aberto da retro da Epic 3) deveria sempre matar seu próprio processo por PID capturado no início, nunca confiar em "a sessão SSH fechou".
+
 ## Resolved (não mais deferido)
 
 - ~~`AuthProvider.verifyToken` (AC #10, Zero Trust) adiado formalmente pra Epic 3~~ — **resolvido pela Story 3.1** (2026-09-04): `verifyToken` implementado, `ctx.user` populado a partir do header `Authorization: Bearer`, primeiro consumidor real é o middleware `requireResource`.

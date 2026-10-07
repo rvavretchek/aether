@@ -278,6 +278,18 @@ export function buildSharedFiles(): Record<string, string> {
       '  }),',
       ');',
       '',
+      '// Story 5.8 (FR-15) — o INPUT de bulkImport não é Zod (é FormData bruto, ver',
+      '// router.ts); só o resultado por linha tem schema. Um resultado por linha do',
+      "// CSV, na ordem original — nunca aborta o lote inteiro por uma linha só.",
+      'export const bulkImportUsersResultItemSchema = z.object({',
+      '  email: z.string(),',
+      "  status: z.enum(['created', 'duplicate', 'invalid']),",
+      '});',
+      '',
+      'export const bulkImportUsersOutputSchema = z.array(',
+      '  bulkImportUsersResultItemSchema,',
+      ');',
+      '',
     ].join('\n'),
 
     'src/schemas/system.ts': [

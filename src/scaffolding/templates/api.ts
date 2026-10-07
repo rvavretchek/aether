@@ -32,6 +32,9 @@ export function buildApiFiles(): Record<string, string> {
             jose: '6.2.10',
             '@fastify/cookie': '11.1.2',
             nodemailer: '10.0.13',
+            // Story 5.8 (FR-15) — biblioteca madura do ecossistema csv.js.org, nunca
+            // parsing de CSV feito à mão (aspas/escaping/CRLF são armadilhas reais).
+            'csv-parse': '7.0.3',
             shared: 'workspace:*',
             db: 'workspace:*',
           },
