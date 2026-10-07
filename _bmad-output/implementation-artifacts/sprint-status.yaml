@@ -41,7 +41,7 @@
 # - Retrospective appends its action items to action_items; sprint-status surfaces open ones
 
 generated: 2026-08-27
-last_updated: 10-07-2026 15:10
+last_updated: 10-07-2026 15:20
 project: Aether
 project_key: NOKEY
 tracking_system: file-system
@@ -77,7 +77,7 @@ development_status:
   5-6-group-membership-backend: done
   5-7-role-resources-backend: done
   5-8-bulk-user-import: done
-  epic-5-retrospective: optional
+  epic-5-retrospective: done
 action_items:
   - id: "epic-3-retro-item-1-construir-um-harness-reutilizavel-de-val"
     epic: 3
@@ -88,3 +88,65 @@ action_items:
     owner: "Boss"
     status: open
     ref: "_bmad-output/implementation-artifacts/epic-3-retro-2026-10-01.md"
+  - id: "epic-5-retro-item-1-corrigir-comentario-incorreto-de-unicidade-de-role"
+    epic: 5
+    action: "Corrigir comentario em shared.ts (~linha 123) que afirma falsamente que
+      Role.name e unico por design (AD-7 so cobre Resource.name, nunca Role) - risco
+      de suposicao falsa se propagar mais."
+    owner: "Boss"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-5-retro-2026-10-07.md"
+  - id: "epic-5-retro-item-2-unificar-assertusernitenant-com-assertassigneeintenant"
+    epic: 5
+    action: "Unificar assertUserInTenant (Story 5.6) para chamar assertAssigneeInTenant
+      internamente - duplicacao verbatim do mesmo check que nenhuma review individual
+      pegou."
+    owner: "Boss"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-5-retro-2026-10-07.md"
+  - id: "epic-5-retro-item-3-tratar-erro-em-roleassignments-create"
+    epic: 5
+    action: "Envolver db.roleAssignment.create() no mesmo padrao de mapeamento de
+      erro (P2003/P2025) ja usado no resto do admin router - e a unica escrita do
+      arquivo sem tratamento, numa procedure que concede acesso."
+    owner: "Boss"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-5-retro-2026-10-07.md"
+  - id: "epic-5-retro-item-4-decidir-unicidade-real-de-role-name"
+    epic: 5
+    action: "Decidir se Role.name deveria ter @@unique([tenantId, name]) de verdade
+      - hoje duas Roles com nome identico coexistem silenciosamente no mesmo tenant."
+    owner: "Boss"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-5-retro-2026-10-07.md"
+  - id: "epic-5-retro-item-5-consolidar-inventario-de-toctou-aceitos"
+    epic: 5
+    action: "Consolidar as 4 janelas de TOCTOU ja aceitas individualmente (Stories
+      5.2/5.5/5.6/5.7) numa unica entrada de Dev Notes/arquitetura."
+    owner: "Boss"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-5-retro-2026-10-07.md"
+  - id: "epic-5-retro-item-6-avaliar-split-de-admin-ts"
+    epic: 5
+    action: "Decidir se vale abrir uma story de refactor para quebrar admin.ts (router+testes)
+      por sub-recurso (users/groups/roles/roleAssignments) - arquivo gerado passou
+      de ~3000 linhas sem nenhum ponto de corte natural restante."
+    owner: "Boss"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-5-retro-2026-10-07.md"
+  - id: "epic-5-retro-item-7-priorizar-harness-de-validacao-pos-geracao"
+    epic: 5
+    action: "Retomar o action item aberto da Epic 3 (harness reutilizavel de validacao
+      pos-geracao) - o sintoma (processos orfaos no laboratorio) se repetiu nesta
+      epic tambem."
+    owner: "Boss"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-5-retro-2026-10-07.md"
+  - id: "epic-5-retro-item-8-decidir-desbloqueio-do-admin-ui"
+    epic: 5
+    action: "Decidir se o admin UI (bloqueado em decisao de UX/design) deve ser desbloqueado
+      agora que todo o backend da Epic 5 esta pronto - e o unico trabalho que resta
+      para tornar o diferencial do produto visivel."
+    owner: "Boss"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-5-retro-2026-10-07.md"
