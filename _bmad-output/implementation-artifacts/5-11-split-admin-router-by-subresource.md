@@ -5,7 +5,7 @@ context: [_bmad-output/implementation-artifacts/epic-5-retro-2026-10-07.md]
 
 # Story 5.11: Dividir admin.ts por sub-recurso (users/groups/roles/roleAssignments)
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -27,29 +27,29 @@ Esta é uma refatoração **puramente estrutural** — nenhum comportamento obse
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Mapear dependências exatas antes de mover nada (AC: #1, #2)
-  - [ ] 1.1 Confirmar contra o `admin.ts` ATUAL (não confiar só nesta story — o arquivo pode ter mudado desde que foi escrita) qual helper é usado por qual sub-router. Mapa conhecido no momento desta story: `isUniqueConstraintError` (P2002) → `users.create/update` E `roles.create/update` (compartilhado); `isRoleInUseError` (P2003) → só `roles.delete`; `isRecordNotFoundError` (P2025) → `groups.addMember/removeMember` E `roles.addResource/removeResource` (compartilhado); `assertUserInTenant`/`updateGroupMembership` → só `groups`; `updateRoleResources`/`assertResourceExists` → só `roles`; `assertAssigneeInTenant` → só `roleAssignments`; `createUserWithSetupEmail`/`ACCOUNT_SETUP_TOKEN_TTL_MS`/`MAX_BULK_IMPORT_ROWS`/`MAX_BULK_IMPORT_BYTES`/`UploadedFormData` → só `users`. Se o mapa real divergir do que está escrito aqui, siga o código real, não esta lista.
-- [ ] Task 2: `prisma-errors.ts` (AC: #1)
-  - [ ] 2.1 Novo arquivo no template `admin.ts` (nova entrada no `Record` retornado por `buildAdminFiles()`, chave `'src/core/admin/prisma-errors.ts'`): os 3 helpers de código Prisma, com os MESMOS comentários explicativos que já têm hoje (não reescrever a justificativa, só mover).
-- [ ] Task 3: `users.router.ts` + `users.router.test.ts` (AC: #1, #2)
-  - [ ] 3.1 Mover `ACCOUNT_SETUP_TOKEN_TTL_MS`, `MAX_BULK_IMPORT_ROWS`, `UploadedFormData`, `MAX_BULK_IMPORT_BYTES`, `createUserWithSetupEmail`, e o sub-router `users` inteiro (list/create/bulkImport/update/revokeSessions) pra este arquivo novo. Importa `isUniqueConstraintError`/`isRecordNotFoundError` (se usado) de `./prisma-errors.js`.
-  - [ ] 3.2 Mover todos os testes de `users.*` pra `users.router.test.ts`, importando de `./admin-test-helpers.js` (Task 7) em vez de redefinir `cleanupTenant`/`makeAdminCtx`/`csvFormData` localmente.
-- [ ] Task 4: `groups.router.ts` + `groups.router.test.ts` (AC: #1, #2, #5)
-  - [ ] 4.1 Mover `assertUserInTenant`, `updateGroupMembership`, e o sub-router `groups` inteiro (list/create/update/delete/addMember/removeMember/listMembers). Importa `isRecordNotFoundError` de `./prisma-errors.js`.
-  - [ ] 4.2 Mover todos os testes de `groups.*`.
-- [ ] Task 5: `roles.router.ts` + `roles.router.test.ts` (AC: #1, #2)
-  - [ ] 5.1 Mover `updateRoleResources`, `assertResourceExists`, e o sub-router `roles` inteiro (list/create/update/delete/addResource/removeResource/listResources). Importa `isUniqueConstraintError`/`isRoleInUseError`/`isRecordNotFoundError` de `./prisma-errors.js`.
-  - [ ] 5.2 Mover todos os testes de `roles.*`.
-- [ ] Task 6: `role-assignments.router.ts` + `role-assignments.router.test.ts` (AC: #1, #2, #5)
-  - [ ] 6.1 Mover `assertAssigneeInTenant` e o sub-router `roleAssignments` inteiro (list/create/delete).
-  - [ ] 6.2 Mover todos os testes de `roleAssignments.*`.
-- [ ] Task 7: `admin-test-helpers.ts` compartilhado (AC: #2)
-  - [ ] 7.1 Novo arquivo de teste-helper (não é teste em si, só utilitário importado pelos 4 arquivos de teste): `cleanupTenant`, `makeAdminCtx` (factory — precisa receber `tenantId` como parâmetro agora, já que cada arquivo de teste tem seu PRÓPRIO `beforeEach`/`tenantId`, não um compartilhado), `makeModuleRoleFixture`, `cleanupModuleRoleFixture`, `csvFormData`. Cada um dos 4 arquivos de teste importa daqui em vez de redefinir.
-- [ ] Task 8: `router.ts` reduzido a composição (AC: #1)
-  - [ ] 8.1 `src/core/admin/router.ts` (template): só os 4 imports de sub-router + `export const adminRouter = router({...})`. Nenhum helper, nenhuma lógica de procedure sobra aqui.
-- [ ] Task 9: Validação de equivalência comportamental (AC: #3)
-  - [ ] 9.1 Contar os testes ANTES da divisão (rodar a suíte local, anotar o número total) e DEPOIS (mesmo número — nenhum teste perdido, nenhum duplicado). Divergência de contagem é sinal de erro na divisão, não algo a investigar depois.
-  - [ ] 9.2 Rodar a suíte completa gerada contra Postgres real (Laboratório Integrit) — mesma disciplina de toda story anterior, mesmo sendo uma refatoração sem mudança de comportamento (a Epic 3 já ensinou que "é só estrutural" não é desculpa pra pular validação real).
+- [x] Task 1: Mapear dependências exatas antes de mover nada (AC: #1, #2)
+  - [x] 1.1 Confirmar contra o `admin.ts` ATUAL (não confiar só nesta story — o arquivo pode ter mudado desde que foi escrita) qual helper é usado por qual sub-router. Mapa conhecido no momento desta story: `isUniqueConstraintError` (P2002) → `users.create/update` E `roles.create/update` (compartilhado); `isRoleInUseError` (P2003) → só `roles.delete`; `isRecordNotFoundError` (P2025) → `groups.addMember/removeMember` E `roles.addResource/removeResource` (compartilhado); `assertUserInTenant`/`updateGroupMembership` → só `groups`; `updateRoleResources`/`assertResourceExists` → só `roles`; `assertAssigneeInTenant` → só `roleAssignments`; `createUserWithSetupEmail`/`ACCOUNT_SETUP_TOKEN_TTL_MS`/`MAX_BULK_IMPORT_ROWS`/`MAX_BULK_IMPORT_BYTES`/`UploadedFormData` → só `users`. Se o mapa real divergir do que está escrito aqui, siga o código real, não esta lista. **Confirmado contra o código real: o mapa estava correto — única divergência encontrada foi em `makeModuleRoleFixture` (Task 7, ver Review Findings), não neste mapa de helpers de produção.**
+- [x] Task 2: `prisma-errors.ts` (AC: #1)
+  - [x] 2.1 Novo arquivo no template `admin.ts` (nova entrada no `Record` retornado por `buildAdminFiles()`, chave `'src/core/admin/prisma-errors.ts'`): os 3 helpers de código Prisma, com os MESMOS comentários explicativos que já têm hoje (não reescrever a justificativa, só mover).
+- [x] Task 3: `users.router.ts` + `users.router.test.ts` (AC: #1, #2)
+  - [x] 3.1 Mover `ACCOUNT_SETUP_TOKEN_TTL_MS`, `MAX_BULK_IMPORT_ROWS`, `UploadedFormData`, `MAX_BULK_IMPORT_BYTES`, `createUserWithSetupEmail`, e o sub-router `users` inteiro (list/create/bulkImport/update/revokeSessions) pra este arquivo novo. Importa `isUniqueConstraintError`/`isRecordNotFoundError` (se usado) de `./prisma-errors.js`.
+  - [x] 3.2 Mover todos os testes de `users.*` pra `users.router.test.ts`, importando de `./admin-test-helpers.js` (Task 7) em vez de redefinir `cleanupTenant`/`makeAdminCtx`/`csvFormData` localmente.
+- [x] Task 4: `groups.router.ts` + `groups.router.test.ts` (AC: #1, #2, #5)
+  - [x] 4.1 Mover `assertUserInTenant`, `updateGroupMembership`, e o sub-router `groups` inteiro (list/create/update/delete/addMember/removeMember/listMembers). Importa `isRecordNotFoundError` de `./prisma-errors.js`.
+  - [x] 4.2 Mover todos os testes de `groups.*`.
+- [x] Task 5: `roles.router.ts` + `roles.router.test.ts` (AC: #1, #2)
+  - [x] 5.1 Mover `updateRoleResources`, `assertResourceExists`, e o sub-router `roles` inteiro (list/create/update/delete/addResource/removeResource/listResources). Importa `isUniqueConstraintError`/`isRoleInUseError`/`isRecordNotFoundError` de `./prisma-errors.js`.
+  - [x] 5.2 Mover todos os testes de `roles.*`.
+- [x] Task 6: `role-assignments.router.ts` + `role-assignments.router.test.ts` (AC: #1, #2, #5)
+  - [x] 6.1 Mover `assertAssigneeInTenant` e o sub-router `roleAssignments` inteiro (list/create/delete).
+  - [x] 6.2 Mover todos os testes de `roleAssignments.*`.
+- [x] Task 7: `admin-test-helpers.ts` compartilhado (AC: #2)
+  - [x] 7.1 Novo arquivo de teste-helper (não é teste em si, só utilitário importado pelos 4 arquivos de teste): `cleanupTenant`, `makeAdminCtx` (factory — precisa receber `tenantId` como parâmetro agora, já que cada arquivo de teste tem seu PRÓPRIO `beforeEach`/`tenantId`, não um compartilhado), `makeModuleRoleFixture`, `cleanupModuleRoleFixture`, `csvFormData`. Cada um dos 4 arquivos de teste importa daqui em vez de redefinir. **Achado durante a implementação (ver Review Findings): `makeModuleRoleFixture` também fechava sobre o `tenantId` do describe block compartilhado (não só `makeAdminCtx`, como os Dev Notes citavam explicitamente) — mesmo ajuste de assinatura aplicado (`tenantId` como primeiro parâmetro), todos os call sites atualizados.**
+- [x] Task 8: `router.ts` reduzido a composição (AC: #1)
+  - [x] 8.1 `src/core/admin/router.ts` (template): só os 4 imports de sub-router + `export const adminRouter = router({...})`. Nenhum helper, nenhuma lógica de procedure sobra aqui. **Nota: a AC #1 lista "importa os 4 sub-routers + `requireAdmin`", mas esta subtask (mais específica) não cita `requireAdmin` — seguido o texto da subtask: `router.ts` NÃO importa `requireAdmin` (cada sub-router já aplica `.use(requireAdmin())` procedure a procedure, importar aqui sem uso real falharia `pnpm lint` com import não utilizado). Ver Review Findings.**
+- [x] Task 9: Validação de equivalência comportamental (AC: #3)
+  - [x] 9.1 Contar os testes ANTES da divisão (rodar a suíte local, anotar o número total) e DEPOIS (mesmo número — nenhum teste perdido, nenhum duplicado). Divergência de contagem é sinal de erro na divisão, não algo a investigar depois. **84 testes em `router.test.ts` antes (87 `it()` no arquivo original, 3 em `require-admin.test.ts` intocados + 84 no monólito) → 84 depois, divididos em `users.router.test.ts` (32) + `groups.router.test.ts` (18) + `roles.router.test.ts` (23) + `role-assignments.router.test.ts` (11) = 84. Contagem confirmada via grep antes de mover qualquer coisa, e novamente após, nos 4 arquivos novos.**
+  - [x] 9.2 Rodar a suíte completa gerada contra Postgres real (Laboratório Integrit) — mesma disciplina de toda story anterior, mesmo sendo uma refatoração sem mudança de comportamento (a Epic 3 já ensinou que "é só estrutural" não é desculpa pra pular validação real). **Deferido explicitamente para a sessão orquestradora — ver Debug Log References. Este worktree isolado não tem acesso ao Laboratório/SSH; NÃO marcar esta preocupação como resolvida até a sessão orquestradora confirmar.**
 
 ## Dev Notes
 
@@ -83,8 +83,44 @@ Mesmo padrão de toda story: os Tasks acima editam `src/scaffolding/templates/ad
 
 ### Agent Model Used
 
+claude-sonnet-5
+
 ### Debug Log References
+
+- Processo mecânico: `buildAdminFiles()` do template `admin.ts` atual foi primeiro DESPEJADO em arquivos reais via um script `tsx` descartável (chamando a função e escrevendo cada chave num arquivo de verdade num diretório temporário), permitindo editar/dividir os 4 arquivos como TypeScript normal (sem lidar com escaping de array-de-strings linha a linha). Um segundo script reconstruiu o `admin.ts` a partir dos 13 arquivos finais (encoding automático, sem digitação manual de escapes). Antes de substituir o arquivo real, um ROUND-TRIP foi verificado: o `admin.ts` gerado foi importado de novo, `buildAdminFiles()` chamado, as 13 saídas despejadas de novo num segundo diretório, e `diff -rq` contra o diretório de origem confirmou **zero diferenças, byte a byte** — garantia de que a reconstrução do template não introduziu nenhuma corrupção de conteúdo antes de tocar no arquivo real do repositório.
+- Contagem de testes (Task 9.1): 87 `it(...)` totais no `admin.ts` original — 3 em `require-admin.test.ts` (intocado por esta story) + 84 em `router.test.ts` (o monólito a dividir). Após a divisão: `users.router.test.ts` (32) + `groups.router.test.ts` (18) + `roles.router.test.ts` (23) + `role-assignments.router.test.ts` (11) = 84. Contagem confirmada via grep em ambos os momentos.
+- `pnpm typecheck`, `pnpm lint`, `pnpm test` (suíte do próprio gerador, sem `DATABASE_URL`): todos limpos após o split. Um teste pré-existente (`write-structural-seed.test.ts`, "writes every file of the Structural Seed tree for this story scope") falhou na primeira rodada — a lista fixa de arquivos esperados ainda citava `apps/api/src/core/admin/router.ts`/`router.test.ts` (os 2 nomes antigos); corrigido para listar as 13 chaves novas que `buildAdminFiles()` agora retorna (mudança mecânica, consequência direta da própria divisão, não um achado de bug).
+- `pnpm format:check` deste repositório gerador (não o do projeto gerado) falha — mas confirmado **pré-existente e não relacionado a esta story**: `git show HEAD:src/scaffolding/templates/admin.ts` (a versão ANTES de qualquer mudança desta story) também falha `prettier --check`, e um arquivo nunca tocado por esta story (`src/scaffolding/templates/api.ts`) falha da mesma forma. Causa raiz identificada: `core.autocrlf=true` neste checkout Windows (sem `.gitattributes` normalizando) faz todo arquivo ser materializado com CRLF, enquanto o Prettier (default `endOfLine: "lf"`) espera LF — drift de ambiente pré-existente em todo o repositório, não algo introduzido aqui.
+- Validação via harness da Story 5.9 (`npx tsx scripts/validate-scaffold.ts --dir <tmp>`, sem `--database-url`): `scaffold` PASS, `lint` PASS, `format:check` PASS, `test` PASS — `typecheck` FAIL com 2 erros em `apps/api/src/core/auth/router.ts` (`TS2339` em `setCookie`/`cookies`, augmentação de tipo do `@fastify/cookie` "ausente"). **Confirmado pré-existente e não relacionado à divisão do admin router**: rodei o MESMO harness, no MESMO diretório de trabalho, contra o `admin.ts` ORIGINAL (stash temporário das minhas mudanças, restaurado depois via `git stash apply` + `git stash drop` — nunca um `git stash pop` bruto) — resultado idêntico, mesmos 2 erros, mesmas 2 linhas, em `core/auth/router.ts` (arquivo nunca tocado por esta story). O próprio harness já documenta esse padrão de falha em comentário próprio (ambiente-dependente, relacionado a hoisting de tipos do `@fastify/cookie` via pnpm, não ao código gerado). Não é um "PASS em toda etapa" limpo, mas a causa está isolada e comprovadamente fora do escopo desta story.
+- Validação real contra Postgres (Laboratório Integrit, Task 9.2): **deferida explicitamente para a sessão orquestradora** — este worktree é isolado e não tem acesso a lab/SSH. Não marcar esta preocupação como resolvida até a sessão orquestradora confirmar a rodada real.
 
 ### Completion Notes List
 
+- `buildAdminFiles()` (template `admin.ts`) agora retorna 13 chaves em vez de 4: `require-admin.ts`/`require-admin.test.ts` (intocados), `prisma-errors.ts`, `users.router.ts`+teste, `groups.router.ts`+teste, `roles.router.ts`+teste, `role-assignments.router.ts`+teste, `admin-test-helpers.ts`, e `router.ts` reduzido a composição pura. Nenhuma mudança em `write-structural-seed.ts` (confirmado antes de começar — `prefixKeys('apps/api', buildAdminFiles())` já espalha qualquer conjunto de chaves sem lista hardcoded).
+- AC #5 (decisão explícita) confirmada no código final: `assertUserInTenant` (`groups.router.ts`) e `assertAssigneeInTenant` (`role-assignments.router.ts`) permanecem duas funções separadas — grep confirmou zero import de um `*.router.ts` por outro.
+- `prisma-errors.ts` confirmado como folha da árvore de imports: zero imports próprios, só os 4 sub-routers importam dele.
+- Teste pré-existente `write-structural-seed.test.ts` ajustado (lista fixa de arquivos esperados) — único arquivo fora do escopo nominal da story tocado, e só pela consequência mecânica direta de `buildAdminFiles()` ter mudado de forma (Task 8/9 exigem que a suíte do gerador fique limpa).
+- Validação real contra Postgres (lab) permanece pendente — ver Debug Log References. Status fica em `review`, não `done`, até a sessão orquestradora confirmar essa etapa.
+
 ### File List
+
+- `src/scaffolding/templates/admin.ts` (M) — `buildAdminFiles()` dividido em 13 chaves.
+- `src/scaffolding/write-structural-seed.test.ts` (M) — lista fixa de arquivos esperados atualizada para os novos nomes de arquivo do core/admin.
+- `_bmad-output/implementation-artifacts/5-11-split-admin-router-by-subresource.md` (M) — este arquivo.
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` (M) — status da story `5-11-split-admin-router-by-subresource` para `review`.
+
+## Review Findings
+
+Self-review (leitura completa do diff por mim mesmo, sem camadas adversariais separadas — ver instrução da sessão orquestradora) focado em: (a) ciclo de import entre os arquivos novos, (b) `router.ts` reduzido a composição pura de verdade, (c) AC #5 (duas funções separadas) de fato sem cross-import acidental.
+
+- [x] [Review][Patch] `makeModuleRoleFixture` (hoje `admin-test-helpers.ts`) fechava sobre a variável `tenantId` do `describe` block compartilhado do monólito original — os Dev Notes desta story só citavam `makeAdminCtx` precisando do ajuste de assinatura (`tenantId` como parâmetro explícito), mas a mesma razão (cada um dos 4 arquivos de teste novos tem seu PRÓPRIO `beforeEach`/`tenantId` local, não um compartilhado) se aplica identicamente a `makeModuleRoleFixture` [`_bmad-output/implementation-artifacts/5-11-split-admin-router-by-subresource.md` Task 1.1/Dev Notes estava incompleto neste ponto] — corrigido: `makeModuleRoleFixture(tenantId: string)` com `tenantId` como primeiro parâmetro explícito, todos os call sites nos 2 arquivos de teste que o usam (`roles.router.test.ts`, `role-assignments.router.test.ts`) atualizados para `makeModuleRoleFixture(tenantId)`.
+- [x] [Review][Patch] Teste pré-existente `write-structural-seed.test.ts` ("writes every file of the Structural Seed tree for this story scope") falhava após a divisão — sua lista fixa de arquivos esperados ainda citava os 2 nomes antigos (`core/admin/router.ts`/`router.test.ts`) em vez dos 13 novos [`src/scaffolding/write-structural-seed.test.ts`] — corrigido: lista atualizada para as 13 chaves atuais de `buildAdminFiles()`, prefixadas com `apps/api/`.
+- [x] [Review][Patch] Chamadas de teste que antes passavam por `adminRouter.createCaller(ctx).users.list()` (etc.) precisavam ser adaptadas pra `usersRouter.createCaller(ctx).list()` (etc.) — mecânica inevitável de testar cada sub-router isoladamente em vez de através da composição `adminRouter`, mas vale registrar explicitamente como a "mudança mecânica de import" que a AC #3 já antecipava, não uma mudança de comportamento [todos os 4 `*.router.test.ts` novos].
+
+**Rejeitados:**
+- `baixo` — a AC #1 descreve `router.ts` como importando "os 4 sub-routers + `requireAdmin`", mas a Task 8.1 (mais específica) e a implementação final NÃO importam `requireAdmin` em `router.ts` — cada sub-router já aplica `.use(requireAdmin())` procedure a procedure (comportamento idêntico ao router monolítico original, que também aplicava por procedure, nunca uma vez só no nível do router composto). Importar `requireAdmin` em `router.ts` sem nenhum uso real falharia `pnpm lint` (import não utilizado) — segui a Task (mais operacional) sobre a redação solta da AC, documentado aqui em vez de "corrigir" introduzindo um import morto só para casar com o texto da AC.
+- `baixo` — `pnpm format:check` deste repositório gerador falha (CRLF vs. LF, `core.autocrlf=true` sem `.gitattributes`) — confirmado pré-existente (presente no `admin.ts` ANTES desta story e em arquivos nunca tocados por ela, como `api.ts`). Fora do escopo desta story corrigir a configuração de line-ending do repositório inteiro; registrado em Debug Log References, não "corrigido" aqui.
+- `baixo` — o harness da Story 5.9 (`validate-scaffold.ts`) reporta `FAIL` na etapa de `typecheck` do projeto GERADO (`@fastify/cookie`, `core/auth/router.ts`) — confirmado pré-existente e idêntico rodando o MESMO harness contra o `admin.ts` ORIGINAL (antes desta story), no mesmo ambiente. Arquivo afetado nunca foi tocado por esta story. Fora do escopo corrigir aqui; documentado em Debug Log References.
+
+**Deferido:**
+- Validação real contra Postgres (Laboratório Integrit) — Task 9.2 exige essa rodada, mas este worktree isolado não tem acesso a lab/SSH. Explicitamente deferido para a sessão orquestradora, que tem esse acesso e deve rodá-la antes de marcar esta story como `done`.
