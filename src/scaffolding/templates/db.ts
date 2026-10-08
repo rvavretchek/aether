@@ -188,6 +188,11 @@ export function buildDbFiles(): Record<string, string> {
       '  resources       Resource[]',
       '  roleAssignments RoleAssignment[]',
       '',
+      '  // Story 5.10 (decisão de produto da retro da Epic 5, não arquitetura',
+      '  // original) — por TENANT, nunca global (diferente de Resource.name, que',
+      '  // É global por design, AD-7). Group.name continua sem unicidade nenhuma',
+      '  // (Story 5.3, decisão separada).',
+      '  @@unique([tenantId, name])',
       '  @@map("roles")',
       '}',
       '',
@@ -625,6 +630,12 @@ export function buildDbFiles(): Record<string, string> {
     'migrations/20261002000100_add_user_is_admin/migration.sql': [
       '-- AlterTable',
       'ALTER TABLE "users" ADD COLUMN "is_admin" BOOLEAN NOT NULL DEFAULT false;',
+      '',
+    ].join('\n'),
+
+    'migrations/20261007000000_add_role_name_unique/migration.sql': [
+      '-- CreateIndex',
+      'CREATE UNIQUE INDEX "roles_tenant_id_name_key" ON "roles"("tenant_id", "name");',
       '',
     ].join('\n'),
 
