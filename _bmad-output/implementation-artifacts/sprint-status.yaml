@@ -80,7 +80,7 @@ development_status:
   5-9-post-generation-validation-harness: done
   epic-5-retrospective: done
   5-10-role-name-uniqueness: done
-  5-11-split-admin-router-by-subresource: review
+  5-11-split-admin-router-by-subresource: done
 action_items:
   - id: "epic-3-retro-item-1-construir-um-harness-reutilizavel-de-val"
     epic: 3
