@@ -15,7 +15,8 @@
     "lint": "eslint .",
     "format:check": "prettier --check .",
     "format": "prettier --write .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "validate:scaffold": "tsx scripts/validate-scaffold.ts"
   },
   "dependencies": {
     "tsx": "4.19.2"
