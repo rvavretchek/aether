@@ -153,6 +153,12 @@ Um administrador visualiza, cria, edita, remove e organiza Usuários/Grupos/Pap�
 **FRs cobertas:** FR14, FR15
 **Depende de:** Epic 1, Epic 2, Epic 3, Epic 4
 
+### Epic 6: Migração de Usuário/Grupo/Papel para Objeto Genérico (Class Table Inheritance)
+Reescrita arquitetural (sem feature nova, sem mudança de comportamento observável) de User/Group/Role — hoje modelos Prisma concretos independentes (Epic 5) — para o padrão `DirectoryObject` (tabela base genérica + extensão tipada por classe, AD-11/AD-12 da Architecture Spine), com `RoleAssignment.subjectId`+`subjectObjectClass` substituindo as colunas `userId`/`groupId` separadas. Motivada pela retomada do UX do admin (reaproveitando o UX já finalizado do Directory Service do Tecton, projeto irmão) e pela decisão do Boss de alinhar o core de identidade do Aether ao mesmo padrão "domínio = classe de objeto" do Tecton, preservando garantias reais de banco (unicidade/FK/índice) que o Tecton não preserva.
+**FRs cobertas:** nenhuma nova — reescreve a base de FR14/FR15 (já entregues pela Epic 5) sob uma forma física diferente.
+**Depende de:** Epic 5 (reescreve o que ela entregou).
+**Nota de implementação:** decisão do Boss (2026-10-09) de executar como uma única story grande, sem quebra por sub-recurso (diferente do padrão de stories pequenas usado na Epic 5) — schema + os 4 routers (`users`/`groups`/`roles`/`roleAssignments`) + todos os testes reescritos juntos numa só entrega. Ver `docs/aether-tecton-compatibility.md` e a Architecture Spine (AD-11/AD-12, atualizada 2026-10-09) para o desenho completo.
+
 ### Observações de planejamento (não travam nenhuma epic)
 
 - **Risco de exposição de portfólio:** o valor visualmente demonstrável do diferencial do produto (árvore de identidade navegável) só existe a partir da Epic 5, a última do MVP. Epics 1–2 entregam valor real (CLI, auth) mas não são o "gancho" do pitch; Epic 3 entrega o motor mas sem tela. Se o cronograma apertar, a Epic 5 é a candidata natural a cortar — e é justamente a única que torna o diferencial visível. Sem mudança de estrutura por ora (decisão do Boss); registrado para referência em priorização futura caso o prazo aperte.
