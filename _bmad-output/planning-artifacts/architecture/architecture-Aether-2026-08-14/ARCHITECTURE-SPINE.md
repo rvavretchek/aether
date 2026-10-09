@@ -7,7 +7,7 @@ paradigm: 'Modular monolith — Hexagonal (Ports & Adapters) per Módulo'
 scope: 'Arquitetura do MVP do Aether (framework React + Node "baterias incluídas" + árvore de identidade), derivada do PRD final prd-Aether-2026-08-11. Governa o projeto gerado por `aether-admin new`/`generate`, não o código interno do próprio CLI.'
 status: final
 created: '2026-08-14'
-updated: '2026-08-17'
+updated: '2026-10-09'
 binds: [FR-1, FR-2, FR-3, FR-4, FR-5, FR-6, FR-7, FR-8, FR-9, FR-10, FR-11, FR-12, FR-13, FR-14, FR-15, FR-16, FR-17, FR-18, FR-19, FR-20, FR-21, FR-22, FR-23, FR-24, FR-25, FR-26, FR-27, FR-28]
 sources:
   - '_bmad-output/planning-artifacts/prds/prd-Aether-2026-08-11/prd.md'
@@ -87,7 +87,7 @@ flowchart TB
 
 - **Binds:** FR-11, FR-27, NFR §8.1, PRD §11 (questão aberta #1).
 - **Prevents:** cache in-process por réplica quebrando revogação imediata (FR-9); introdução de Redis fora do escopo já fechado; meta de performance ficar indefinida.
-- **Rule:** a meta p95 < 10ms (escala de dev/pequena equipe) cobre o middleware `requireResource` **inteiro** — ancestralidade + resolução de Papel + cobertura de Recurso, ponta a ponta — não só a subconsulta de ancestralidade. Índices obrigatórios cobrem toda tabela tocada pelo caminho crítico: `ModuleClosure(ancestorId, descendantId)`, `RoleAssignment(assigneeId, targetModuleId)`, e o join Papel↔Recurso. Nenhuma camada de cache (in-process ou externa) na frente dessa consulta no MVP.
+- **Rule:** a meta p95 < 10ms (escala de dev/pequena equipe) cobre o middleware `requireResource` **inteiro** — ancestralidade + resolução de Papel + cobertura de Recurso, ponta a ponta — não só a subconsulta de ancestralidade. Índices obrigatórios cobrem toda tabela tocada pelo caminho crítico: `ModuleClosure(ancestorId, descendantId)`, `RoleAssignment(subjectId, targetModuleId)` (corrigido pela AD-12, 2026-10-09 — `assigneeId` nunca existiu de verdade no schema real), e o join Papel↔Recurso. Nenhuma camada de cache (in-process ou externa) na frente dessa consulta no MVP.
 
 ### AD-9 — Sem alvo de deploy de produção no MVP
 
@@ -100,6 +100,25 @@ flowchart TB
 - **Binds:** FR-28.
 - **Prevents:** introdução de Redis fora do escopo já fechado; contador em memória por réplica que não pega ataque distribuído entre instâncias; tabela de rate-limit reaproveitando colunas/semântica da tabela de revogação de refresh token (FR-9 fala em "mesmo banco de dados", não "mesma tabela" — as duas features não devem disputar dono de uma única tabela).
 - **Rule:** um único plugin Fastify em `core/auth` aplica rate limit por identificador (email/IP) contra uma tabela Postgres **própria** (`RateLimitHit(identifier, windowStart, count)`), no mesmo banco de dados usado pelo `TokenRevocationStore` (FR-9) mas fisicamente separada dele — nunca contador in-process, nunca coluna reaproveitada da tabela de revogação. Login e redefinição de senha usam o mesmo plugin/tabela, nunca implementações paralelas.
+
+### AD-11 — Entidades administráveis como objeto genérico + extensão tipada (Class Table Inheritance) [2026-10-08, revisada 2026-10-09 pós-review]
+
+- **Binds:** FR-14, núcleo de identidade/admin (Usuário/Grupo/Papel), AD-5 (isolamento de tenant). Compatibilidade pretendida com o Tecton (projeto irmão) — `docs/aether-tecton-compatibility.md`, decisões de 2026-10-08.
+- **Prevents:** cada tipo administrável novo (ex.: Custodiante, identidade externa) exigindo reescrever do zero schema+router+testes, como a Epic 5 fez separadamente para User/Group/Role/RoleAssignment; perder garantia real de banco (unicidade/FK/índice) em troca de um bag JSON genérico — trade-off que a AD-2 do Tecton aceita conscientemente, mas que o Aether rejeita explicitamente (decisão do Boss); confundir "objeto tratado de forma genérica no código" com "atributo persistido solto em JSON" — são decisões independentes; duas sessões divergindo em COMO a linha base e a linha de extensão são criadas juntas (achado do Reviewer Gate — ver abaixo); uma tabela de extensão ficando de fora do isolamento de tenant por alguém assumir, errado, que `DirectoryObject` já cobre sozinha.
+- **Rule:**
+  - **Forma física (revisada pós-review):** `DirectoryObject` é a tabela base (`id` UUID v7 `@default(uuid(7))`, `tenantId`, `objectClass` — **enum Postgres fechado** (`User | Group | Role`, nunca string livre), `createdAt`/`updatedAt`). Cada tipo (`User`, `Group`, `Role`) é uma tabela de extensão com **PK própria** (`id` UUID v7 `@default(uuid(7))`, gerada independentemente — **nunca compartilhada com a do `DirectoryObject`**) **+** uma coluna `directoryObjectId @unique` com FK pra `DirectoryObject.id`. Isso segue a recomendação atual do próprio Prisma pra Table Inheritance (verificado nesta sessão) em vez do padrão "PK compartilhada" — `directoryObjectId @unique` garante, no banco, que nunca existam duas linhas de extensão pra um mesmo `DirectoryObject` (a PK compartilhada não garantia isso), e elimina qualquer ambiguidade sobre COMO o `id` é compartilhado entre as duas linhas (achado do Reviewer Gate: PK compartilhada deixava em aberto se o id vem gerado pelo client ou por uma transação interativa — com PKs independentes essa pergunta deixa de existir).
+  - **`tenantId` é duplicado (denormalizado) em toda tabela de extensão** — não só em `DirectoryObject`. Sem isso, `@@unique([tenantId, name])` em `Role` (Story 5.10) e `@@unique([tenantId, email])` em `User` são literalmente impossíveis de expressar (achado CRÍTICO do Reviewer Gate). Mesmo padrão de denormalização de `tenantId` já aceito em `RefreshToken`/`PasswordResetToken` desde a Story 2.1/4.2 — não é uma exceção nova. A extensão de tenant da AD-5 usa `$allModels` (não lista model por model, achado da Story 3.3) — `User`/`Group`/`Role` como tabelas de extensão são cobertas automaticamente, **sem nenhuma configuração adicional**, pelo mesmo mecanismo que já cobre todo model tenant-scoped hoje.
+  - `Role.name` mantém `@@unique([tenantId, name])` (Story 5.10), `User.email` mantém `@@unique([tenantId, email])`, ambos agora na tabela de extensão. `Group.name` continua sem unicidade (Story 5.3). Toda extensão pode ter uma coluna `attributes JSONB` própria pra atributo livre — schema-ready, nunca populada por nenhuma procedure no MVP.
+  - Criar um objeto é sempre criar as DUAS linhas (base + extensão) na mesma transação Prisma (`$transaction`), nessa ordem: `DirectoryObject` primeiro (sua PK já existe antes da extensão precisar referenciá-la via `directoryObjectId`), depois a extensão. Deletar é sempre pela linha base, com `ON DELETE CASCADE` pra extensão — nenhum código de produto cria ou deleta só a extensão isoladamente.
+  - **Padrão de leitura único, pra evitar duas sessões inventando dois caminhos divergentes (achado do Reviewer Gate):** uma operação ESPECÍFICA de tipo (listar Papéis, validar nome) sempre começa pela tabela de EXTENSÃO (`db.role.findMany(...)`, `include: { directoryObject: true }` só se precisar de `tenantId`/`objectClass`/`createdAt` da base). Uma operação GENÉRICA/polimórfica (resolver o assignee de um `RoleAssignment`, listar objetos de uma árvore) sempre começa por `DirectoryObject`, usa `objectClass` pra decidir qual relação de extensão incluir (`user`/`group`/`role`) — nunca o inverso, nunca os dois padrões misturados no mesmo tipo de operação.
+  - `Module` (árvore de código, AD-6) fica **fora** deste padrão — não é objeto genérico de dado, é código real gerado por `generate module`; `RoleAssignment.targetModuleId` continua apontando para `Module` sem mudança. Nenhum mecanismo de geração automática (`generate directory-object` ou similar, paralelo à AD-6) existe no MVP — adicionar um `objectClass` novo ainda é trabalho manual (tabela de extensão + router + testes); geração automática fica Deferred.
+  - **Reconciliação explícita:** esta AD reescreve o schema/routers/testes que a Epic 5 (Stories 5.1-5.11) já entregou e tem como `done` em `sprint-status.yaml` — `src/scaffolding/templates/db.ts`/`admin.ts`/`shared.ts` ainda refletem a forma ANTIGA (modelos concretos independentes) até a story de migração ser executada. Mesmo padrão de nota já usado nesta spine pra Module/Tenant (Story 3.1) e EdDSA→HS256 (Story 2.1): a spine muda primeiro, o código acompanha depois, numa story dedicada.
+
+### AD-12 — `RoleAssignment.subjectId` único (FK polimórfica tipada), substituindo `userId`/`groupId` separados [2026-10-08, revisada 2026-10-09 pós-review]
+
+- **Binds:** FR-12, AD-8 (índice do caminho crítico de `requireResource`). Reconcilia uma divergência entre esta spine e o código real: a AD-8 já citava um índice `RoleAssignment(assigneeId, targetModuleId)` com um único campo de assignee, mas a Story 5.5 implementou `userId`/`groupId` como duas colunas nullable (discriminated union) sem nunca corrigir a spine — achado desta sessão, não um comportamento novo sendo inventado.
+- **Prevents:** um terceiro tipo de assignee futuro (ex.: Custodiante) exigindo uma TERCEIRA coluna nullable; a divergência entre o índice documentado (`assigneeId`) e o schema real (`userId`/`groupId`) continuar nunca corrigida; perder, sem perceber, a garantia real de banco que hoje restringe o assignee a User-ou-Group (achado MÉDIO do Reviewer Gate — uma FK polimórfica solta pra `DirectoryObject.id`, sem mais nada, aceitaria uma Role ou um Custodiante futuro como assignee sem o banco reclamar).
+- **Rule:** `RoleAssignment.userId`/`RoleAssignment.groupId` (Story 5.5) são substituídas por **duas colunas**: `subjectId` (FK pra `DirectoryObject.id`) **+** `subjectObjectClass` (denormalizada, mesmo valor do `DirectoryObject.objectClass` referenciado, escrita na mesma operação que `subjectId`). A FK é composta — `@relation(fields: [subjectId, subjectObjectClass], references: [id, objectClass])`, viável porque `DirectoryObject` ganha `@@unique([id, objectClass])` (trivial, já que `id` sozinho já é único) — **mais** um `CHECK (subjectObjectClass IN ('User', 'Group'))`. Isso restaura, via um padrão real de FK composta + discriminador (não um truque ad-hoc), a mesma garantia de banco que o par `userId`/`groupId` tinha hoje: o Postgres rejeita, na escrita, qualquer `subjectId` que não seja de fato um User ou Group — nunca checagem só de aplicação. `ON DELETE CASCADE` em `subjectId → DirectoryObject.id` — mesmo comportamento já existente hoje pra `role_assignments_group_id_fkey` (Story 5.3/5.6); deletar o objeto (User ou Group) remove as atribuições dele automaticamente. `RoleAssignment.roleId` continua apontando para `Role` (agora uma extensão de `DirectoryObject`, AD-11) sem mudança estrutural. **AD-8 (acima) é corrigida por esta AD**: o índice do caminho crítico passa a ser `RoleAssignment(subjectId, targetModuleId)` — `assigneeId` nunca existiu de verdade, era nome desatualizado da spine original.
 
 ## Consistency Conventions
 
@@ -172,7 +191,7 @@ aether-project/                  # gerado por `aether-admin new`
     shared/
       src/schemas/<modulo>.ts    # única fonte de schema Zod por módulo (AD-3)
     db/
-      schema.prisma              # Tenant, User, Group, Role, Module, ModuleClosure, ...
+      schema.prisma              # Tenant, DirectoryObject+{User,Group,Role} (AD-11), Module, ModuleClosure, ...
       extensions/tenant.ts       # Prisma Client Extension (AD-5)
   docker/
     docker-compose.dev.yml       # banco escolhido no setup (FR-2) + Mailpit (FR-20)
@@ -181,20 +200,45 @@ aether-project/                  # gerado por `aether-admin new`
 
 ```mermaid
 erDiagram
-    TENANT ||--o{ USER : escopa
-    TENANT ||--o{ GROUP : escopa
+    TENANT ||--o{ DIRECTORY_OBJECT : escopa
+    DIRECTORY_OBJECT ||--|| USER : "extensão (directoryObjectId @unique)"
+    DIRECTORY_OBJECT ||--|| GROUP : "extensão (directoryObjectId @unique)"
+    DIRECTORY_OBJECT ||--|| ROLE : "extensão (directoryObjectId @unique)"
     MODULE ||--o{ MODULE_CLOSURE : "ancestorId"
     MODULE ||--o{ MODULE_CLOSURE : "descendantId"
     USER }o--o{ GROUP : "membro de (join)"
-    USER ||--o{ ROLE_ASSIGNMENT : "assignee (usuário)"
-    GROUP ||--o{ ROLE_ASSIGNMENT : "assignee (grupo)"
+    DIRECTORY_OBJECT ||--o{ ROLE_ASSIGNMENT : "subjectId+subjectObjectClass (User ou Group, AD-12)"
     MODULE ||--o{ ROLE_ASSIGNMENT : "alvo (papel sobre)"
     ROLE ||--o{ ROLE_ASSIGNMENT : atribuído
     ROLE }o--o{ RESOURCE : "concede (join)"
     USER ||--o{ REFRESH_TOKEN : possui
+
+    DIRECTORY_OBJECT {
+        string id PK "UUID v7, gerado independente da extensão"
+        string tenantId FK
+        string objectClass "enum: User | Group | Role (AD-11)"
+    }
+    USER {
+        string id PK "UUID v7, PK própria"
+        string directoryObjectId FK "unique, 1:1 com DirectoryObject"
+        string tenantId FK "denormalizado, mesmo padrão de RefreshToken"
+        string email "unique por tenant"
+    }
+    GROUP {
+        string id PK "UUID v7, PK própria"
+        string directoryObjectId FK "unique, 1:1 com DirectoryObject"
+        string tenantId FK "denormalizado"
+        string name "sem unicidade, Story 5.3"
+    }
+    ROLE {
+        string id PK "UUID v7, PK própria"
+        string directoryObjectId FK "unique, 1:1 com DirectoryObject"
+        string tenantId FK "denormalizado"
+        string name "unique por tenant, Story 5.10"
+    }
 ```
 
-*Nota: `RESOURCE.kind` distingue `NAMED_PERMISSION` (implementado no MVP) de `BUSINESS_OBJECT` (contrato `ResourceType` previsto, sem ferramenta de registro genérica no MVP — FR-13). `RESOURCE.name` é único globalmente e segue o padrão `<module-slug>.<ação>` (AD-7). `MODULE_CLOSURE` tem `depth` obrigatório (0 = linha self-referencial) e é append-only no MVP — sem reparent (AD-6). `RATE_LIMIT_HIT(identifier, windowStart, count)` (AD-10) é uma tabela de infraestrutura própria, fora do escopo desta ERD de identidade.*
+*Nota: `RESOURCE.kind` distingue `NAMED_PERMISSION` (implementado no MVP) de `BUSINESS_OBJECT` (contrato `ResourceType` previsto, sem ferramenta de registro genérica no MVP — FR-13). `RESOURCE.name` é único globalmente e segue o padrão `<module-slug>.<ação>` (AD-7). `MODULE_CLOSURE` tem `depth` obrigatório (0 = linha self-referencial) e é append-only no MVP — sem reparent (AD-6). `RATE_LIMIT_HIT(identifier, windowStart, count)` (AD-10) é uma tabela de infraestrutura própria, fora do escopo desta ERD de identidade. `DIRECTORY_OBJECT`/`USER`/`GROUP`/`ROLE` seguem o padrão Class Table Inheritance da AD-11 (PK própria por extensão + `directoryObjectId @unique`, não PK compartilhada — revisado 2026-10-09 pós-review) — `ROLE_ASSIGNMENT.subjectId`+`subjectObjectClass` é uma FK composta pra `DIRECTORY_OBJECT.(id, objectClass)` (AD-12), substituindo as colunas `userId`/`groupId` separadas que a Story 5.5 havia implementado, com `CHECK (subjectObjectClass IN ('User','Group'))` restaurando a mesma garantia de banco que existia antes.*
 
 > **Nota de reconciliação (Story 3.1, 2026-09-04, decisão do Boss):** este ERD originalmente trazia `TENANT ||--o{ MODULE : escopa` (Module pertencendo a um Tenant). Ao implementar o schema real da Story 3.1, isso colidiu com AD-7/a nota acima ("`RESOURCE.name` é único globalmente... resource corresponde a operação de código, não a dado de tenant"): `Resource` tem FK obrigatória e única pra um `Module`, então um `Module` tenant-scoped tornava qualquer `Resource` utilizável só pelo tenant "dono" do seu `Module` — RBAC quebrado pra qualquer outro tenant da instalação. Achado independente de 3 layers de code review (Blind Hunter, Edge Case Hunter, Acceptance Auditor), sem nenhum teste de 2 tenants simultâneos pra pegar antes. **Resolução:** `MODULE`/`MODULE_CLOSURE`/`RESOURCE` são GLOBAIS — estrutura de código compartilhada por toda a instalação (bate com a leitura literal de AD-6: `generate module` roda uma vez, insere "a linha", não uma por tenant). Isolamento multi-tenant vive só em `ROLE_ASSIGNMENT`/`USER`/`GROUP`/`ROLE` — a linha `TENANT ||--o{ MODULE` foi removida do diagrama acima. Mesmo padrão desta nota já usado pra reconciliação EdDSA→HS256 (Story 2.1, ver seção Stack).
 
@@ -208,7 +252,7 @@ erDiagram
 | FR-5 (migrations) | `packages/db/schema.prisma` | Stack (Prisma) |
 | FR-7, FR-8, FR-9, FR-10, FR-26 (auth/segredos) | `apps/api/src/core/{auth,secrets}` | AD-4, Consistency Conventions |
 | FR-28 (rate limiting) | `apps/api/src/core/auth` (plugin Fastify) | AD-10 |
-| FR-11, FR-12, FR-13, FR-14 (árvore de identidade + admin) | `packages/db/schema.prisma` (Module/ModuleClosure/User/Group/Role/Resource), módulo `core` de admin | AD-6, AD-7, AD-8, ERD |
+| FR-11, FR-12, FR-13, FR-14 (árvore de identidade + admin) | `packages/db/schema.prisma` (Module/ModuleClosure/DirectoryObject+User/Group/Role/Resource), módulo `core` de admin | AD-6, AD-7, AD-8, AD-11, AD-12, ERD |
 | FR-15 (import em lote de Usuários, upload CSV) | módulo `core` de admin, transporte via `apps/api` | AD-3 (upload via FormData/Blob), AD-6, ERD |
 | FR-16, FR-17 (tRPC + Zod) | `apps/api/src/root-router.ts`, `packages/shared` | AD-1, AD-3 |
 | FR-18, FR-19, FR-20 (notificações) | `apps/api/src/core/notifications` | AD-4 |
@@ -222,7 +266,8 @@ erDiagram
 - **Arquitetura interna do próprio `aether-admin` CLI** (o gerador) — esta spine governa o projeto gerado, não a ferramenta que o gera. Fica para uma spine própria se/quando o CLI crescer o suficiente para precisar de invariantes formais.
 - **Alvo de deploy de produção, Dockerfile hardened, pipeline CI/CD** (AD-9) — Fast-follow explícito do PRD (§6.2); revisitar quando o MVP tiver o primeiro projeto real em produção.
 - **Cache (Redis), filas assíncronas** — Fast-follow explícito do PRD; revisitar se a meta de latência do AD-8 deixar de se sustentar em escala real.
-- **Autenticação plugável (Keycloak, OpenBAO)** — Roadmap; a porta `AuthProvider` (AD-4) já existe para isso, implementação fica para quando houver demanda real.
+- **Autenticação plugável (Keycloak, OpenBAO)** — Roadmap; a porta `AuthProvider` (AD-4) já existe para isso, implementação fica para quando houver demanda real. **Nota de 2026-10-08**: nenhuma avaliação comparativa de IDM foi feita ainda em nenhum dos dois projetos-irmãos — quando acontecer, avaliar opções open source/gratuitas explicitamente (ZITADEL, Ory, Logto, Casdoor, Authentik, além do Keycloak), não assumir Keycloak por padrão; ver `docs/aether-tecton-compatibility.md`.
+- **`generate directory-object <Nome>` (ou mecanismo equivalente)** — Roadmap explícito (AD-11, 2026-10-08): adicionar um `objectClass` novo ao core de identidade (ex.: Custodiante) continua sendo trabalho manual (tabela de extensão + router + testes) no MVP; um gerador paralelo ao `generate module` (AD-6) fica para quando houver demanda real, decisão deliberada do Boss para não inflar ainda mais esta migração.
 - **Isolamento de tenant por banco dedicado** — Roadmap; a extensão de tenant (AD-5) já é o ponto de troca, sem reforma prevista.
 - **`TokenRevocationStore` Redis-backed** — Roadmap opcional da mesma interface; MVP é Postgres/Prisma-backed (FR-9).
 - **Árvore visual com drag-and-drop** — Roadmap; o modelo de dados (ERD) já está preparado, a UI de FR-14 é deliberadamente não-drag-and-drop no MVP.
