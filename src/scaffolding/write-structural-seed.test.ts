@@ -243,7 +243,7 @@ describe('writeStructuralSeed', () => {
       'utf-8',
     );
     expect(schema).toContain(
-      'isAdmin      Boolean  @default(false) @map("is_admin")',
+      'isAdmin           Boolean  @default(false) @map("is_admin")',
     );
   });
 
