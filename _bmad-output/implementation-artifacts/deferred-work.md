@@ -88,6 +88,11 @@
 
 - **Unicidade de `Role.name` é case-sensitive** (`"Manager"` e `"manager"` coexistem no mesmo tenant sem conflito) — achado do Blind Hunter: a motivação original da story ("nunca ter dois Papéis me confundindo numa tela") não fecha totalmente esse caso, e o Boss só decidiu "Role.name deve ser único", nunca "case-insensitive". Decisão de produto adicional pendente, fora do escopo autorizado desta story. [src/scaffolding/templates/db.ts]
 
+## Deferred from: code review of 6-1-directory-object-migration (2026-10-12)
+
+- **Orçamento de latência de `requireResource` (AD-8) não revalidado com os 3 round-trips novos** — a query de cobertura passou de 2 pra 3 round-trips (resolver `directoryObjectId` do subject/Grupos antes da query de cobertura em si), já que `RoleAssignment` deixou de ter relação direta aninhada `user`/`group` (AD-12). Já sinalizado no próprio comentário do código; só pode ser confirmado contra Postgres real — revisitar junto da validação da Task 10.3 desta story, ou quando o orçamento de latência for medido ponta a ponta de novo. [src/scaffolding/templates/authz.ts]
+- **Teste da CHECK constraint (Task 9.3) usa `.rejects.toThrow()` genérico em vez do código de erro específico do Postgres** — prova a rejeição (o insert não acontece), mas não distingue "rejeitado pela CHECK certa" de "rejeitado por qualquer outro motivo". Afiar a asserção depois de confirmar contra Postgres real (Task 10.3) qual código/forma de erro o Prisma de fato propaga pra uma violação de CHECK. [src/scaffolding/templates/admin.ts]
+
 ## Resolved (não mais deferido)
 
 - ~~`AuthProvider.verifyToken` (AC #10, Zero Trust) adiado formalmente pra Epic 3~~ — **resolvido pela Story 3.1** (2026-09-04): `verifyToken` implementado, `ctx.user` populado a partir do header `Authorization: Bearer`, primeiro consumidor real é o middleware `requireResource`.

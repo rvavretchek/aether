@@ -72,6 +72,26 @@ Esta story implementa a AD-11 e a AD-12 da Architecture Spine (atualizadas em 20
   - [x] 10.2 Harness `validate-scaffold.ts` rodado localmente (sem `--database-url`, via `pnpm run validate:scaffold --keep --dir ...`): `scaffold` PASS, `lint` PASS, `format:check` PASS, `test` PASS (97 testes contados em `core/admin`+`core/authz`, todos skip por falta de `DATABASE_URL`, nenhuma falha). `typecheck` reporta FAIL só através do harness (`spawnSync` com `shell: true` dentro do próprio `pnpm`/Claude Code) — reproduz o MESMO achado já documentado no comentário do próprio `validate-scaffold.ts` (poluição de ambiente de um processo-pai, TS2339 em `apps/api/src/core/auth/router.ts`, nada relacionado a `core/admin`/`core/authz`/Story 6.1); confirmado que `pnpm run typecheck` direto, dentro do projeto gerado, passa limpo (`tsc --build` sem erros). Diretórios de scaffold temporários removidos após a validação.
   - [ ] 10.3 Validação real no Laboratório Integrit — **deferred explicitamente pra sessão orquestradora**: este worktree não tem acesso SSH ao Laboratório Integrit (banco Postgres real), conforme instruído. Ver Debug Log.
 
+### Review Findings
+
+Code review de 4 camadas (Blind Hunter, Edge Case Hunter, Verification Gap Reviewer, Acceptance Auditor) sobre o diff `6815ae3..fcd3f71` (Tasks 1-10.2). Acceptance Auditor: zero achados (todas as 8 AC conferem contra AD-11/AD-12). Achados das demais camadas, triados:
+
+- [x] [Review][Patch] `groups.delete`/`roles.delete` reintroduziam TOCTOU vazando erro bruto do Prisma (P2025) em vez de `NOT_FOUND` [src/scaffolding/templates/admin.ts:1328, 2010] — a troca de `deleteMany`+`count` (atômico) por `findUnique`+`directoryObject.delete` abriu uma corrida: se o registro for excluído entre as duas chamadas, o P2025 não era capturado. Corrigido reaplicando o padrão `isRecordNotFoundError` já usado em `updateGroupMembership`/`addResource` no mesmo arquivo.
+- [x] [Review][Patch] `write-structural-seed.test.ts` não acompanhou a migração/schema novos [src/scaffolding/write-structural-seed.test.ts] — faltava a entrada `20261009000000_directory_object_migration` em `expectedFiles` e qualquer asserção de conteúdo pra `DirectoryObject`/`DirectoryObjectClass`/`directoryObjectId`/`subjectId`+`subjectObjectClass`, quebrando o padrão que toda story anterior que tocou `schema.prisma` seguiu. Adicionadas as duas asserções faltantes (2 novos `it(...)`).
+- [x] [Review][Defer] Orçamento de latência de `requireResource` (AD-8) não revalidado com os 3 round-trips novos [src/scaffolding/templates/authz.ts] — deferred: já corretamente sinalizado pelo próprio comentário do código; só pode ser confirmado contra Postgres real (Task 10.3).
+- [x] [Review][Defer] Teste da CHECK constraint (Task 9.3) usa `.rejects.toThrow()` genérico em vez de afirmar o código de erro específico do Postgres [src/scaffolding/templates/admin.ts:3167] — deferred: a forma exata do erro (P2010 envolvendo `23514`, ou outra) só pode ser confirmada contra Postgres real (Task 10.3); afiar a asserção depois se valer a pena.
+
+**Rejeitados:**
+- `low` — Lista `IN (...)` sem limite de `directoryObjectId`s de Grupo na query de cobertura de `requireResource`: tradeoff inerente ao modelo polimórfico escolhido pela Architecture Spine (AD-11/AD-12), fora do escopo desta story introduzir paginação/limite.
+- `low` — Classes de subject válidas (`User`/`Group`) duplicadas entre o enum Zod, a CHECK do Postgres e o literal TS: mesmo padrão já usado por todo outro enum deste código-base (ex.: `ResourceKind`), não uma lacuna introduzida por esta story.
+- `false` — `TransactionClient` como `Omit<TenantDb, ...>` hand-maintained: decisão deliberada e precedentada (mesma disciplina de não depender de `@prisma/client` direto já seguida em `prisma-errors.ts`).
+- `false` — `ALTER TABLE role_assignments ADD COLUMN ... NOT NULL` sem backfill: o próprio comentário da migração documenta que a tabela está vazia nesse ponto — é a decisão explícita da AC #6 (sem dado real a preservar, AD-9), não um descuido.
+- `false` — Atomicidade de `createDirectoryObjectWithExtension` "não testada"/possível linha órfã de `DirectoryObject` em fixtures de teste: o caminho de produção é genuinamente atômico via `$transaction`+`tx` real; as fixtures de teste pulam a transação de propósito (decisão documentada no código, AC #2 fala de procedures, não fixtures) e qualquer linha órfã já é limpa pelo `directoryObject.deleteMany` tenant-scoped existente em `cleanupTenant`.
+- `low` — Duplicação de boilerplate de fixture (criação inline de `groupMember` em vez de `createTestUser`; `makeUser`/`makeRole` de `authz.ts` duplicados pro cenário cross-tenant): cosmético, sem defeito funcional.
+- `false` — Rollback de `users.router.ts` engolindo erro via `.catch(() => undefined)`: padrão pré-existente, carregado sem mudança desde a Story 5.1 (confirmado idêntico no código anterior a esta story) — não é uma regressão desta migração.
+
+**Código review complete.** 0 `decision-needed`, 2 `patch` (aplicados), 2 `defer`, 5 rejeitados.
+
 ## Dev Notes
 
 ### 🎯 Onde este código vive
