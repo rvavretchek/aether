@@ -113,6 +113,7 @@ describe('writeStructuralSeed', () => {
       'packages/db/migrations/20260904000000_add_identity_tree/migration.sql',
       'packages/db/migrations/20261002000000_add_password_reset_token/migration.sql',
       'packages/db/migrations/20261002000100_add_user_is_admin/migration.sql',
+      'packages/db/migrations/20261009000000_directory_object_migration/migration.sql',
       'docker/docker-compose.dev.yml',
       'docker/Dockerfile.dev',
     ];
@@ -245,6 +246,41 @@ describe('writeStructuralSeed', () => {
     expect(schema).toContain(
       'isAdmin           Boolean  @default(false) @map("is_admin")',
     );
+  });
+
+  it('packages/db/schema.prisma has DirectoryObject + User/Group/Role as typed extensions (Story 6.1, AD-11, Class Table Inheritance)', async () => {
+    const targetDir = await makeTempDir();
+
+    await writeStructuralSeed(targetDir, 'my-app');
+
+    const schema = await readFile(
+      join(targetDir, 'packages/db/schema.prisma'),
+      'utf-8',
+    );
+    expect(schema).toMatch(/enum\s+DirectoryObjectClass\s*\{/);
+    expect(schema).toMatch(/model\s+DirectoryObject\s*\{/);
+    // PK própria por extensão, nunca compartilhada com DirectoryObject.id (achado
+    // do Reviewer Gate da Architecture Spine) — cada extensão declara sua própria
+    // FK 1:1 via directoryObjectId @unique.
+    expect(schema).toContain('directoryObjectId String   @unique @map("directory_object_id")');
+    expect(schema).toContain('@@unique([id, objectClass])');
+  });
+
+  it('packages/db/schema.prisma has RoleAssignment.subjectId/subjectObjectClass, not userId/groupId (Story 6.1, AD-12)', async () => {
+    const targetDir = await makeTempDir();
+
+    await writeStructuralSeed(targetDir, 'my-app');
+
+    const schema = await readFile(
+      join(targetDir, 'packages/db/schema.prisma'),
+      'utf-8',
+    );
+    expect(schema).toContain('subjectId          String               @map("subject_id")');
+    expect(schema).toContain(
+      'subjectObjectClass DirectoryObjectClass @map("subject_object_class")',
+    );
+    expect(schema).not.toMatch(/model\s+RoleAssignment\s*\{[^}]*userId/);
+    expect(schema).not.toMatch(/model\s+RoleAssignment\s*\{[^}]*groupId/);
   });
 
   it('apps/api/src/root-router.ts actually wires adminRouter (Story 5.1, AC #4/#5/#6 — achado do code review: só existência era checada antes)', async () => {
