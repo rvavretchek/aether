@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Direção 4 — Autoral e Distintivo</title>
+<style>
+/*
+  DIREÇÃO 4 — Autoral / Distintivo
+  Marca: âmbar dourado + vinho profundo em gradiente diagonal (assinatura),
+  sobre base ink-ameixa — nem azul corporativo, nem roxo-SaaS.
+  ------------------------------------------------------------------
+  Tema Claro
+    --bg:            #F1EDE6
+    --panel:         #FFFFFF
+    --panel-alt:     #F6F1E9
+    --border:        #E3DCD0
+    --text:          #241923
+    --text-muted:    #7A6E72
+    --accent:        #C98A12
+    --accent-2:      #7A1F3D
+    --accent-text:   #FFFFFF
+    --accent-soft:   #FBEBC7
+    --danger:        #9C2B2B
+    --gradient:      linear-gradient(135deg, #F2B705 0%, #C98A12 45%, #7A1F3D 100%)
+
+  Tema Escuro
+    --bg:            #16101A
+    --panel:         #1F1822
+    --panel-alt:     #271E2B
+    --border:        #3A2D3F
+    --text:          #F3EDE7
+    --text-muted:    #AE9FA8
+    --accent:        #FFD23F
+    --accent-2:      #E0558A
+    --accent-text:   #2B1600
+    --accent-soft:   #3A2A14
+    --danger:        #F2847C
+    --gradient:      linear-gradient(135deg, #FFD23F 0%, #F2A33E 45%, #E0558A 100%)
+*/
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: #E7E0D5;
+  color: #241923;
+  padding: 40px 24px 80px;
+}
+.serif { font-family: Georgia, "Iowan Old Style", "Palatino Linotype", "Times New Roman", serif; }
+.showcase { max-width: 1180px; margin: 0 auto; }
+.showcase-header { margin-bottom: 36px; }
+.showcase-header h1 { font-size: 27px; font-weight: 700; margin-bottom: 10px; font-family: Georgia, "Iowan Old Style", "Palatino Linotype", serif; }
+.rationale { font-size: 14px; line-height: 1.65; color: #574A4F; max-width: 760px; }
+
+.theme-block { margin-bottom: 56px; }
+.theme-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #7A6E72; margin-bottom: 14px; }
+.screen-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #7A6E72; margin: 30px 0 14px; }
+
+.browser-frame { border-radius: 12px; overflow: hidden; border: 1px solid #E3DCD0; box-shadow: 0 18px 44px rgba(50,20,30,0.14); }
+.accent-bar { height: 4px; background: linear-gradient(135deg, #F2B705 0%, #C98A12 45%, #7A1F3D 100%); }
+.browser-chrome { height: 38px; display: flex; align-items: center; gap: 8px; padding: 0 14px; background: #F6F1E9; border-bottom: 1px solid #E3DCD0; }
+.dot { width: 9px; height: 9px; border-radius: 50%; background: #DCD1C0; }
+.url-bar { margin-left: 12px; font-size: 11.5px; color: #9C8F93; background: #FFFFFF; border: 1px solid #E3DCD0; border-radius: 6px; padding: 3px 11px; flex: 1; max-width: 340px; }
+
+.app-shell { display: flex; height: 568px; background: var(--bg); color: var(--text); }
+.theme-light .app-shell { --bg:#F1EDE6; --panel:#FFFFFF; --panel-alt:#F6F1E9; --border:#E3DCD0; --text:#241923; --text-muted:#7A6E72; --accent:#C98A12; --accent-2:#7A1F3D; --accent-text:#FFFFFF; --accent-soft:#FBEBC7; --danger:#9C2B2B; --gradient:linear-gradient(135deg,#F2B705 0%,#C98A12 45%,#7A1F3D 100%); }
+.theme-dark .app-shell  { --bg:#16101A; --panel:#1F1822; --panel-alt:#271E2B; --border:#3A2D3F; --text:#F3EDE7; --text-muted:#AE9FA8; --accent:#FFD23F; --accent-2:#E0558A; --accent-text:#2B1600; --accent-soft:#3A2A14; --danger:#F2847C; --gradient:linear-gradient(135deg,#FFD23F 0%,#F2A33E 45%,#E0558A 100%); }
+
+.sidebar { width: 276px; flex-shrink: 0; background: var(--panel-alt); border-right: 1px solid var(--border); display: flex; flex-direction: column; }
+.sidebar-top { padding: 18px 16px 14px; }
+.brand { font-size: 14.5px; font-weight: 700; margin-bottom: 12px; font-family: Georgia, "Iowan Old Style", "Palatino Linotype", serif; }
+.search-input { width: 100%; font-size: 13px; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); }
+.tree-wrap { padding: 8px 10px; overflow-y: auto; flex: 1; }
+.tree-group { margin-bottom: 6px; }
+.tree-row { display: flex; align-items: center; gap: 9px; padding: 7px 9px; border-radius: 7px; font-size: 13.5px; border-left: 3px solid transparent; }
+.tree-row.group-row { font-weight: 700; color: var(--text); }
+.chevron { width: 12px; color: var(--text-muted); font-size: 10px; }
+.tree-children { margin-left: 18px; }
+.leaf-row { color: var(--text-muted); }
+.leaf-row.active { background: var(--accent-soft); color: var(--accent-2); font-weight: 700; border-image: linear-gradient(180deg, var(--accent), var(--accent-2)) 1; border-left: 3px solid var(--accent); }
+.avatar { width: 22px; height: 22px; border-radius: 7px; background: var(--panel); color: var(--text-muted); font-size: 9.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1px solid var(--border); }
+.leaf-row.active .avatar { background: var(--gradient); color: var(--accent-text); border-color: transparent; }
+.group-dot { width: 7px; height: 7px; border-radius: 2px; background: var(--text-muted); opacity: 0.55; }
+
+.detail-panel { flex: 1; padding: 32px 36px; overflow-y: auto; background: var(--panel); }
+.detail-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 28px; }
+.detail-identity { display: flex; align-items: center; gap: 15px; }
+.avatar-lg { width: 48px; height: 48px; font-size: 16px; border-radius: 12px; background: var(--gradient) !important; color: var(--accent-text) !important; border: none !important; }
+.detail-name { font-size: 20px; font-weight: 700; font-family: Georgia, "Iowan Old Style", "Palatino Linotype", serif; }
+.detail-email { font-size: 13px; color: var(--text-muted); margin-top: 3px; }
+.detail-actions { display: flex; gap: 9px; }
+
+.btn { font-size: 13px; font-weight: 700; padding: 9px 16px; border-radius: 9px; border: 1px solid transparent; }
+.btn-primary { background: var(--gradient); color: var(--accent-text); }
+.btn-ghost { background: transparent; color: var(--text); border-color: var(--border); }
+.btn-ghost-danger { background: transparent; color: var(--danger); border-color: var(--border); }
+
+.detail-section { margin-bottom: 26px; }
+.section-title { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); margin-bottom: 11px; }
+.chip-row { display: flex; gap: 8px; }
+.chip { font-size: 12.5px; font-weight: 700; padding: 6px 13px; border-radius: 999px; background: var(--accent-soft); color: var(--accent-2); }
+
+.role-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.role-table th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); font-weight: 700; padding: 8px 0; border-bottom: 2px solid var(--border); }
+.role-table td { padding: 11px 0; border-bottom: 1px solid var(--border); }
+.role-table tr:first-child td { border-left: 3px solid var(--accent); padding-left: 10px; }
+.role-table tr:last-child td { border-bottom: none; }
+
+.modal-stage { position: relative; height: 568px; background: var(--bg); }
+.modal-backdrop { position: absolute; inset: 0; background: var(--text); opacity: 0.14; }
+.modal { position: absolute; top: 54px; left: 50%; transform: translateX(-50%); width: 390px; background: var(--panel); border-radius: 16px; padding: 26px; box-shadow: 0 26px 60px rgba(30,10,20,0.3); border-top: 4px solid transparent; border-image: linear-gradient(135deg,#F2B705,#7A1F3D) 1; }
+.modal-title { font-size: 17px; font-weight: 700; margin-bottom: 18px; font-family: Georgia, "Iowan Old Style", "Palatino Linotype", serif; }
+.field-label { display: block; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 7px; }
+.field-select { width: 100%; font-size: 13.5px; padding: 9px 12px; border-radius: 9px; border: 1px solid var(--border); background: var(--panel-alt); color: var(--text); margin-bottom: 18px; }
+.mini-tree { list-style: none; font-size: 13px; margin-bottom: 16px; background: var(--panel-alt); border-radius: 10px; padding: 9px 12px; }
+.mini-node { padding: 5px 0; color: var(--text-muted); }
+.mini-node.expanded { color: var(--text); font-weight: 700; }
+.mini-node ul { list-style: none; margin-left: 18px; }
+.mini-node.selected { background: var(--accent-soft); color: var(--accent-2); font-weight: 700; border-radius: 7px; padding: 5px 9px; margin: 2px 0; }
+.helper-text { font-size: 12px; line-height: 1.6; color: var(--text-muted); background: var(--accent-soft); border-radius: 10px; padding: 11px 13px; margin-bottom: 20px; }
+.modal-footer { display: flex; justify-content: flex-end; gap: 9px; }
+</style>
+</head>
+<body>
+<div class="showcase">
+  <div class="showcase-header">
+    <h1 class="serif">Direção 4 — Autoral e Distintivo</h1>
+    <p class="rationale">Marca própria em gradiente âmbar-para-vinho sobre base ink-ameixa — nem o azul corporativo nem o roxo-SaaS óbvios — assina avatares, seleção na árvore e botões primários como um traço reconhecível. Títulos em serifada contrastam com o corpo em sans-serif, dando caráter editorial a uma interface que, sem isso, seria só mais um admin denso: é o registro que mais arrisca, pensado para parecer peça de showroom.</p>
+  </div>
+
+  <!-- ===================== TEMA CLARO ===================== -->
+  <section class="theme-block theme-light">
+    <h2 class="theme-label">Tema Claro</h2>
+    <div class="browser-frame">
+      <div class="accent-bar"></div>
+      <div class="browser-chrome">
+        <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        <span class="url-bar">admin.aether.app/users/jose-matos</span>
+      </div>
+      <div class="app-shell">
+        <aside class="sidebar">
+          <div class="sidebar-top">
+            <div class="brand">Aether Admin</div>
+            <input class="search-input" type="text" placeholder="Buscar no diretório…" value="">
+          </div>
+          <div class="tree-wrap">
+            <div class="tree-group">
+              <div class="tree-row group-row"><span class="chevron">▾</span>Usuários</div>
+              <div class="tree-children">
+                <div class="tree-row leaf-row active"><span class="avatar">JM</span>José Matos</div>
+                <div class="tree-row leaf-row"><span class="avatar">DS</span>Dirce Silva</div>
+                <div class="tree-row leaf-row"><span class="avatar">JS</span>Jurandir Souza</div>
+              </div>
+            </div>
+            <div class="tree-group">
+              <div class="tree-row group-row"><span class="chevron">▾</span>Grupos</div>
+              <div class="tree-children">
+                <div class="tree-row leaf-row"><span class="group-dot"></span>Vendedores</div>
+                <div class="tree-row leaf-row"><span class="group-dot"></span>Produção</div>
+                <div class="tree-row leaf-row"><span class="group-dot"></span>Contabilidade</div>
+              </div>
+            </div>
+          </div>
+        </aside>
+        <main class="detail-panel">
+          <div class="detail-header">
+            <div class="detail-identity">
+              <span class="avatar avatar-lg">JM</span>
+              <div>
+                <div class="detail-name">José Matos</div>
+                <div class="detail-email">jose.matos@acme.com</div>
+              </div>
+            </div>
+            <div class="detail-actions">
+              <button class="btn btn-primary">+ Atribuir Papel</button>
+              <button class="btn btn-ghost-danger">Revogar sessões</button>
+            </div>
+          </div>
+          <div class="detail-section">
+            <div class="section-title">Grupos</div>
+            <div class="chip-row"><span class="chip">Vendedores</span></div>
+          </div>
+          <div class="detail-section">
+            <div class="section-title">Papéis atribuídos</div>
+            <table class="role-table">
+              <thead><tr><th>Papel</th><th>Escopo</th></tr></thead>
+              <tbody>
+                <tr><td>Gerente de Vendas</td><td>Vendas</td></tr>
+                <tr><td>Operador</td><td>Vendas &gt; Região Sul</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <h3 class="screen-label">Tela secundária — Atribuir Papel</h3>
+    <div class="browser-frame">
+      <div class="accent-bar"></div>
+      <div class="browser-chrome">
+        <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        <span class="url-bar">admin.aether.app/users/jose-matos · atribuir papel</span>
+      </div>
+      <div class="modal-stage">
+        <div class="modal-backdrop"></div>
+        <div class="modal">
+          <div class="modal-title serif">Atribuir Papel</div>
+          <label class="field-label">Papel</label>
+          <select class="field-select"><option selected>Operador</option></select>
+          <label class="field-label">Módulo</label>
+          <div class="mini-tree">
+            <div class="mini-node expanded">▾ Vendas</div>
+            <ul><li class="mini-node selected">Região Sul</li></ul>
+            <div class="mini-node">▸ Produção</div>
+            <div class="mini-node">▸ Contabilidade</div>
+          </div>
+          <div class="helper-text">A atribuição é aditiva: José Matos herda automaticamente o módulo escolhido e todos os seus submódulos.</div>
+          <div class="modal-footer">
+            <button class="btn btn-ghost">Cancelar</button>
+            <button class="btn btn-primary">Confirmar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== TEMA ESCURO ===================== -->
+  <section class="theme-block theme-dark">
+    <h2 class="theme-label">Tema Escuro</h2>
+    <div class="browser-frame" style="border-color:#3A2D3F;">
+      <div class="accent-bar" style="background: linear-gradient(135deg,#FFD23F 0%,#F2A33E 45%,#E0558A 100%);"></div>
+      <div class="browser-chrome" style="background:#1F1822; border-color:#3A2D3F;">
+        <span class="dot" style="background:#4A3B4F;"></span><span class="dot" style="background:#4A3B4F;"></span><span class="dot" style="background:#4A3B4F;"></span>
+        <span class="url-bar" style="background:#16101A; border-color:#3A2D3F; color:#AE9FA8;">admin.aether.app/users/jose-matos</span>
+      </div>
+      <div class="app-shell">
+        <aside class="sidebar">
+          <div class="sidebar-top">
+            <div class="brand">Aether Admin</div>
+            <input class="search-input" type="text" placeholder="Buscar no diretório…" value="">
+          </div>
+          <div class="tree-wrap">
+            <div class="tree-group">
+              <div class="tree-row group-row"><span class="chevron">▾</span>Usuários</div>
+              <div class="tree-children">
+                <div class="tree-row leaf-row active"><span class="avatar">JM</span>José Matos</div>
+                <div class="tree-row leaf-row"><span class="avatar">DS</span>Dirce Silva</div>
+                <div class="tree-row leaf-row"><span class="avatar">JS</span>Jurandir Souza</div>
+              </div>
+            </div>
+            <div class="tree-group">
+              <div class="tree-row group-row"><span class="chevron">▾</span>Grupos</div>
+              <div class="tree-children">
+                <div class="tree-row leaf-row"><span class="group-dot"></span>Vendedores</div>
+                <div class="tree-row leaf-row"><span class="group-dot"></span>Produção</div>
+                <div class="tree-row leaf-row"><span class="group-dot"></span>Contabilidade</div>
+              </div>
+            </div>
+          </div>
+        </aside>
+        <main class="detail-panel">
+          <div class="detail-header">
+            <div class="detail-identity">
+              <span class="avatar avatar-lg">JM</span>
+              <div>
+                <div class="detail-name">José Matos</div>
+                <div class="detail-email">jose.matos@acme.com</div>
+              </div>
+            </div>
+            <div class="detail-actions">
+              <button class="btn btn-primary">+ Atribuir Papel</button>
+              <button class="btn btn-ghost-danger">Revogar sessões</button>
+            </div>
+          </div>
+          <div class="detail-section">
+            <div class="section-title">Grupos</div>
+            <div class="chip-row"><span class="chip">Vendedores</span></div>
+          </div>
+          <div class="detail-section">
+            <div class="section-title">Papéis atribuídos</div>
+            <table class="role-table">
+              <thead><tr><th>Papel</th><th>Escopo</th></tr></thead>
+              <tbody>
+                <tr><td>Gerente de Vendas</td><td>Vendas</td></tr>
+                <tr><td>Operador</td><td>Vendas &gt; Região Sul</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <h3 class="screen-label">Tela secundária — Atribuir Papel</h3>
+    <div class="browser-frame" style="border-color:#3A2D3F;">
+      <div class="accent-bar" style="background: linear-gradient(135deg,#FFD23F 0%,#F2A33E 45%,#E0558A 100%);"></div>
+      <div class="browser-chrome" style="background:#1F1822; border-color:#3A2D3F;">
+        <span class="dot" style="background:#4A3B4F;"></span><span class="dot" style="background:#4A3B4F;"></span><span class="dot" style="background:#4A3B4F;"></span>
+        <span class="url-bar" style="background:#16101A; border-color:#3A2D3F; color:#AE9FA8;">admin.aether.app/users/jose-matos · atribuir papel</span>
+      </div>
+      <div class="modal-stage">
+        <div class="modal-backdrop"></div>
+        <div class="modal">
+          <div class="modal-title serif">Atribuir Papel</div>
+          <label class="field-label">Papel</label>
+          <select class="field-select"><option selected>Operador</option></select>
+          <label class="field-label">Módulo</label>
+          <div class="mini-tree">
+            <div class="mini-node expanded">▾ Vendas</div>
+            <ul><li class="mini-node selected">Região Sul</li></ul>
+            <div class="mini-node">▸ Produção</div>
+            <div class="mini-node">▸ Contabilidade</div>
+          </div>
+          <div class="helper-text">A atribuição é aditiva: José Matos herda automaticamente o módulo escolhido e todos os seus submódulos.</div>
+          <div class="modal-footer">
+            <button class="btn btn-ghost">Cancelar</button>
+            <button class="btn btn-primary">Confirmar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+</body>
+</html>
