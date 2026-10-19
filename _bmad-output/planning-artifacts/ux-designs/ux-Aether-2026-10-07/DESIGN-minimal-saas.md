@@ -1,6 +1,9 @@
 ---
 name: "Aether Admin UI — Minimal SaaS"
 description: 'Preset visual "Minimal SaaS" (Camada 0, 1 de 4) do runtime shadcn/ui + Tailwind v4 de `apps/web`, inspirado em Linear/Vercel/Raycast. Especifica só a camada de marca/override sobre shadcn — nomenclatura de token, cor e componente seguem o contrato vinculante da AD-13 (ARCHITECTURE-SPINE.md).'
+status: final
+created: '2026-10-07'
+updated: '2026-10-19'
 colors:
   # Convenção token / token-dark (spec DESIGN.md). Valores em OKLCH (Tailwind v4 /
   # contrato AD-13 — NUNCA hex, mesmo a convenção default do spec sendo hex strings).
@@ -145,9 +148,13 @@ components:
     border: "{colors.border}"
     radius: "{rounded.lg}"
   badge:
-    background: "{colors.success}"
-    foreground: "{colors.success-foreground}"
-    border: "{colors.border}"
+    enabled:
+      background: "{colors.success}"
+      foreground: "{colors.success-foreground}"
+    disabled:
+      background: "{colors.background}"
+      foreground: "{colors.destructive}"
+      border: "{colors.destructive}"
     radius: "{rounded.full}"
 ---
 
@@ -198,7 +205,7 @@ Escala de cantos discretamente mais arredondada que o Tecton (`sm` 4px/`md` 6px 
 
 ## Components
 
-Primitivos shadcn usados **como estão, sem override de marca** (herdam o visual default shadcn/Radix): `Tabs`, `Separator`, `Sheet` (sidebar em viewport estreito), `Popover`, `DropdownMenu`, `Toast`/`Sonner`, `Checkbox`, chrome interno de `Select`. Não customizar estes — o contrato é "shadcn default é a decisão certa aqui".
+Primitivos shadcn usados **como estão, sem override de marca** (herdam o visual default shadcn/Radix): `Tabs`, `Separator`, `Popover`, `DropdownMenu`, `Toast`/`Sonner`, `Checkbox`, chrome interno de `Select`. Não customizar estes — o contrato é "shadcn default é a decisão certa aqui". (`Sheet` removido desta lista em 2026-10-19 — achado do Reviewer Gate: não tem contrato comportamental no `EXPERIENCE.md`, que é desktop-first sem seção Responsive & Platform disparada; incluí-lo sem uso real criava inconsistência com os outros presets.)
 
 Componentes com override de marca (ou construídos à mão sobre Radix, sem equivalente shadcn upstream):
 
@@ -211,7 +218,7 @@ Componentes com override de marca (ou construídos à mão sobre Radix, sem equi
 - **`input`** — fundo `{colors.background}`, borda `{colors.input}`, `{rounded.md}`, anel de foco `{colors.ring}`. Cobre `<input>` de busca da sidebar e `<select>` de formulário (field-select do modal).
 - **`form-field-error`** — borda do input substituída por `{colors.destructive}`, mensagem abaixo do campo em `{colors.destructive}` + `{typography.caption}`. Não pictured no esboço aprovado (que não mostra estado de erro); herda o padrão de comportamento já fixado no `tecton-DESIGN.md` importado (borda destrutiva + texto de erro abaixo do campo) — mesma regra, nomenclatura de token traduzida pro contrato canônico shadcn.
 - **`dialog`** — fundo `{colors.card}`, texto `{colors.card-foreground}`, borda `{colors.border}`, `{rounded.lg}`, sombra larga (ver Elevation), overlay com leve desfoque (ver Elevation). Usado no modal "Atribuir Papel" (seletor de Papel + mini-árvore de Módulo).
-- **`badge`** — fundo `{colors.success}`, texto `{colors.success-foreground}`, borda `{colors.border}`, `{rounded.full}` (pill). Variante de estado habilitado usada para "Empresa habilitada" — agora com cor semântica de positivo (fundo verde sólido), não só a palavra "habilitada" carregando o significado. Variante de estado desabilitado continua trocando só para borda+texto `{colors.destructive}` sobre `{colors.background}` (outline destrutivo), mantendo o mesmo `{rounded.full}`.
+- **`badge`** (`{rounded.full}`, pill) — par de estado binário, forma nested consistente com os outros 3 presets (achado do Reviewer Gate de 2026-10-19: a forma anterior era um único objeto plano, não dava pra expressar as duas variantes no frontmatter). `enabled`: fundo `{colors.success}`, texto `{colors.success-foreground}` — cor semântica de positivo, não só a palavra "habilitada" carregando o significado. `disabled`: fundo `{colors.background}`, texto+borda `{colors.destructive}` (outline destrutivo).
 
 **Resolvido em 2026-10-19**: token `success`/`success-foreground` adicionado ao contrato canônico (AD-13), a pedido do Boss, pra cobrir o estado semântico de positivo que faltava. Badge de status "Empresa habilitada" passa a usar `success`/`success-foreground` (verde) em vez do neutro/`muted` anterior; "desabilitada" continua `destructive` (outline), sem mudança.
 

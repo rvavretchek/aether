@@ -1,6 +1,9 @@
 ---
 name: "Aether Admin UI — Acolhedor e Confiável"
 description: "Preset visual 'Acolhedor e Confiável' (1 dos 4 presets de Camada 0, AD-13) para a Admin UI do Aether — base shadcn/ui + Tailwind CSS v4 (Radix UI, vendorizado); este DESIGN.md especifica só a camada de marca (cores, tipografia, raio) sobre esse contrato, não reimplementa shadcn do zero."
+status: final
+created: '2026-10-07'
+updated: '2026-10-19'
 colors:
   # Convenção canônica shadcn (AD-13) — nomes nunca inventados. Luz/escuro como
   # pares `token`/`token-dark`. Hex original do esboço .working/direction-acolhedor.html
@@ -192,7 +195,7 @@ O raio é, junto da cor, a segunda assinatura visual do preset — visivelmente 
 
 ## Components
 
-**Primitivos shadcn usados tal como vêm, sem override de marca** (ganham a repintura global de tokens — cor/raio — mas nenhum objeto de componente próprio neste DESIGN.md): `Card`, `Popover`, `DropdownMenu`, `Tabs`, `Sheet`, `Tooltip`, `Checkbox`, `Avatar`, `Separator`, `Toast`/`Sonner`, `Select` (o trigger do Select compartilha a mesma pintura do componente `input` abaixo, igual ao próprio shadcn). O contrato: não customizar estes além da repintura automática de tokens.
+**Primitivos shadcn usados tal como vêm, sem override de marca** (ganham a repintura global de tokens — cor/raio — mas nenhum objeto de componente próprio neste DESIGN.md): `Card`, `Popover`, `DropdownMenu`, `Tabs`, `Tooltip`, `Checkbox`, `Avatar`, `Separator`, `Toast`/`Sonner`, `Select` (o trigger do Select compartilha a mesma pintura do componente `input` abaixo, igual ao próprio shadcn). O contrato: não customizar estes além da repintura automática de tokens. (`Sheet` removido desta lista em 2026-10-19 — achado do Reviewer Gate: sem contrato comportamental no `EXPERIENCE.md` desktop-first, inconsistente com os outros presets.)
 
 Componentes com override de marca (listados no frontmatter `components` acima):
 

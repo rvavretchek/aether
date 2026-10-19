@@ -1,6 +1,9 @@
 ---
 name: "Aether Admin UI — Autoral"
 description: 'Preset visual "Autoral/Distintivo" (1 dos 4 escolhíveis em `aether-admin new`, AD-13) para a Admin UI do Aether — camada de marca sobre shadcn/ui + Tailwind CSS v4; este DESIGN.md especifica só o delta de marca, não reimplementa shadcn do zero.'
+status: final
+created: '2026-10-07'
+updated: '2026-10-19'
 colors:
   # ---- Tema claro (default) ----
   # Nomenclatura = convenção canônica shadcn/ui (AD-13). Cada valor é OKLCH
@@ -125,7 +128,7 @@ components:
 
 Este DESIGN.md herda shadcn/ui + Tailwind CSS v4 (primitiva Radix, componentes vendorizados — AD-13) **por completo** como base; documenta só o delta de marca. Os 16 tokens de cor canônicos do shadcn (ver `colors` acima) são todos preenchidos aqui porque este preset os sobrescreve de ponta a ponta (é a definição da Camada 0 "autoral", não um ajuste pontual) — mas a estrutura, os nomes de token e o mecanismo (`--background`, `--primary`, etc., par `-dark` nativo) são exatamente o contrato shadcn, nunca vocabulário inventado. O par `success`/`success-foreground` (+ par `-dark`) é uma extensão do contrato canônico além desses 16 tokens base — decisão do Boss aplicada de forma consistente aos 4 presets da AD-13, não uma invenção isolada deste documento.
 
-**Primitivos shadcn usados tal como vêm (sem override de marca):** `Separator`, `Sheet`, `Popover`, `DropdownMenu`, `Toast`, `Tabs`, `Checkbox`, `Switch`, `Command`. Qualquer customização nesses componentes é contra a disciplina deste preset.
+**Primitivos shadcn usados tal como vêm (sem override de marca):** `Separator`, `Popover`, `DropdownMenu`, `Toast`, `Tabs`, `Checkbox`, `Switch`, `Command`. Qualquer customização nesses componentes é contra a disciplina deste preset. (`Sheet` removido desta lista em 2026-10-19 — achado do Reviewer Gate: sem contrato comportamental no `EXPERIENCE.md` desktop-first, inconsistente com os outros presets.)
 
 **Primitivos com override de marca** (cobertos na seção Components abaixo): `Button` (variante primary ganha o gradiente de assinatura), `Dialog` (barra superior em gradiente + cantos `xl`), `Avatar` (estado ativo/selecionado ganha preenchimento em gradiente — ver nota em Components), `Badge`, `Input`/`Select` (fundo `muted` + cantos `sm`), `Table` (cabeçalho + linha selecionada), e um componente de árvore bespoke (não é primitivo shadcn — construído sob medida, mesmo padrão herdado do `tecton-EXPERIENCE.md`).
 
@@ -194,4 +197,4 @@ Cantos mais generosos que o default shadcn (que deriva sm/md/lg de `calc(var(--r
 | Badge "habilitado" em `{colors.success}`, "desabilitado" em `{colors.destructive}` (par binário de status) | Usar `{colors.accent}`/`{colors.muted}` para indicar estado habilitado/desabilitado — esses tokens são reservados a seleção/ênfase e chrome secundário, não a status |
 | Cantos generosos (`sm` 6 / `md` 8 / `lg` 12 / `xl` 16) em toda a superfície | Usar a escala crispada de 4/6/8 do `tecnico-premium` — dilui a diferenciação entre presets |
 | Sombra tingida de ameixa (ref. `rgba(50,20,30,…)` / `rgba(30,10,20,…)`) | Sombra preta neutra padrão shadcn — perde a assinatura de base ink-ameixa |
-| Herdar shadcn tal como vem em `Separator`/`Sheet`/`Popover`/`DropdownMenu`/`Toast`/`Tabs`/`Checkbox`/`Switch`/`Command` | Reescrever esses primitivos "só para combinar" — a disciplina é não tocar no que não precisa de marca |
+| Herdar shadcn tal como vem em `Separator`/`Popover`/`DropdownMenu`/`Toast`/`Tabs`/`Checkbox`/`Switch`/`Command` | Reescrever esses primitivos "só para combinar" — a disciplina é não tocar no que não precisa de marca |

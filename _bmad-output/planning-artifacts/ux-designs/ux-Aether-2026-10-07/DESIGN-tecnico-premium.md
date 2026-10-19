@@ -158,16 +158,14 @@ components:
     shadow: '0 12px 32px oklch(0 0 0 / 0.2)'
     backdrop: 'oklch(from {colors.foreground} l c h / 10%)'
   badge:
-    background: '{colors.muted}'
-    foreground: '{colors.foreground}'
-    border: '{colors.border}'
-    fontFamily: '{typography.mono.fontFamily}'
-    fontSize: '{typography.caption.fontSize}'
-    radius: '{rounded.sm}'
-  badge-success:
-    background: '{colors.success}'
-    foreground: '{colors.success-foreground}'
-    border: '{colors.success}'
+    enabled:
+      background: '{colors.success}'
+      foreground: '{colors.success-foreground}'
+      border: '{colors.success}'
+    disabled:
+      background: '{colors.muted}'
+      foreground: '{colors.destructive}'
+      border: '{colors.border}'
     fontFamily: '{typography.mono.fontFamily}'
     fontSize: '{typography.caption.fontSize}'
     radius: '{rounded.sm}'
@@ -192,7 +190,7 @@ Este DESIGN.md herda shadcn/ui + Tailwind CSS v4 (Radix UI por baixo, componente
 - **`primary` (ciano `#0E7490` claro / `#22D3EE` escuro)** — a única cor de ênfase do tema. Usada em: botão primário (Atribuir Papel, Confirmar), na borda esquerda de 2px de um nó de árvore selecionado, e como `ring` de foco. `primary-foreground` garante contraste (branco no claro, quase-preto `#04262B` no escuro, porque o ciano claro do tema escuro é luminoso demais para texto branco em cima).
 - **`accent`/`accent-foreground`** — o par "fundo + texto" do estado selecionado/realçado: fundo é um ciano muito claro (`accent`, `#CFF4FC`/`#0E2F33`), o texto por cima é o próprio ciano de `primary` (`accent-foreground`). É o par usado no nó de árvore ativo e na linha de tabela selecionada — nunca em chrome decorativo.
 - **`destructive`/`destructive-foreground`** — vermelho reservado a ações destrutivas (Revogar sessões) e erro de validação. Nunca usado para indicar "desabilitado" no sentido neutro — só para "isto é perigoso ou está bloqueado".
-- **`success`/`success-foreground`** — verde "terminal/status" (`#1F883D` claro / `#238636` escuro, texto branco nos dois temas) reservado estritamente a estado positivo confirmado — hoje só o badge "Empresa habilitada" (ver `badge-success` em Components). Não é uma segunda cor de marca/decoração: assim como `destructive`, só aparece quando o sistema precisa comunicar um status semântico (aqui, positivo), nunca como realce de seleção — esse papel continua exclusivo de `accent`/`primary`.
+- **`success`/`success-foreground`** — verde "terminal/status" (`#1F883D` claro / `#238636` escuro, texto branco nos dois temas) reservado estritamente a estado positivo confirmado — hoje só o badge "Empresa habilitada" (ver variante `enabled` de `badge` em Components). Não é uma segunda cor de marca/decoração: assim como `destructive`, só aparece quando o sistema precisa comunicar um status semântico (aqui, positivo), nunca como realce de seleção — esse papel continua exclusivo de `accent`/`primary`.
 
 Avoid: uma segunda cor de marca decorativa além do ciano (o par semântico `success` não conta — está reservado a status positivo confirmado, nunca a chrome ou seleção); usar `accent` fora do par seleção/realce (ex. como cor decorativa de badge "ok"); reintroduzir hex literal em qualquer tela gerada a partir deste preset — tudo entra via token OKLCH.
 
@@ -238,7 +236,7 @@ Componentes com override de marca, nomes estáveis para referência futura do EX
 - **`input`** — fundo `{colors.background}`, borda `{colors.border}`, `{rounded.md}`. Campos cujo valor é um identificador técnico (o `<select>` de Papel, o `<select>` de Módulo) usam `{typography.mono.fontFamily}` para o valor exibido — camada de marca sobre o `Input`/`Select` do shadcn, cuja anatomia (altura, foco, estado desabilitado) não muda.
 - **`form-field-error`** — texto `{colors.destructive}` em `{typography.label.fontFamily}`, tamanho `caption`. Substitui a borda do campo por `{colors.destructive}` (herdado do padrão shadcn de campo inválido, sem override adicional aqui).
 - **`dialog`** — modal "Atribuir Papel" e qualquer outro diálogo de confirmação (ex. habilitar/desabilitar Empresa). Fundo `{colors.card}`, borda `{colors.border}`, `{rounded.lg}`, padding `{spacing.dialog-padding}`, sombra e scrim conforme a seção Elevation & Depth acima.
-- **`badge` / `badge-success`** — chip de status/metadado (grupo associado a um usuário, badge de Empresa habilitada/desabilitada). Forma neutra por padrão (`badge`): fundo `{colors.muted}`, texto `{colors.foreground}`, borda `{colors.border}`, texto em `mono`, `{rounded.sm}` — segue em uso para metadado sem semântica de status (ex. chip de grupo). Badge "Empresa habilitada" usa `badge-success`: fundo `{colors.success}`, texto `{colors.success-foreground}`, borda `{colors.success}`, mesma tipografia/raio do `badge` base. Badge "Empresa desabilitada" continua trocando só o texto para `{colors.destructive}` sobre o fundo neutro do `badge` base, reaproveitando o mesmo raciocínio do botão ghost-destructive. *Resolvido em 2026-10-19*: o gap antes registrado aqui (ausência de token semântico de "positivo/habilitado" no contrato canônico) foi fechado pela extensão da AD-13 com o par `success`/`success-foreground` (+ `-dark`); este documento já reflete o par novo.
+- **`badge`** (texto em `mono`, `{rounded.sm}`) — par de estado binário, forma nested consistente com os outros 3 presets (achado do Reviewer Gate de 2026-10-19: a forma anterior tinha `badge`/`badge-success` como duas chaves irmãs em vez de um único componente com duas variantes — quebrava consumo mecânico por um gerador de template). `enabled`: fundo `{colors.success}`, texto `{colors.success-foreground}`, borda `{colors.success}` — usado em "Empresa habilitada". `disabled`: fundo `{colors.muted}`, texto `{colors.destructive}`, borda `{colors.border}` — usado em "Empresa desabilitada", mesmo raciocínio do botão ghost-destructive. *Resolvido em 2026-10-19*: o gap antes registrado aqui (ausência de token semântico de "positivo/habilitado" no contrato canônico) foi fechado pela extensão da AD-13 com o par `success`/`success-foreground` (+ `-dark`); este documento já reflete o par novo. **Chip de metadado genérico** (ex. grupo associado a um usuário) não é o componente `badge` — é reuso informal de `{colors.muted}`/`{colors.foreground}`/`{rounded.sm}` sem token/componente próprio nomeado, mesmo tratamento que os outros 3 presets dão a esse caso (nenhum deles formaliza um componente "chip" separado).
 - **`skeleton-loading`** — placeholder de carregamento de linha de árvore/tabela (variação de estado já ilustrada no esboço deste preset). Barra com gradiente `{colors.muted}` → `{colors.border}` → `{colors.muted}` em animação de 1.4s `ease-in-out` infinita (`background-position` de 100% a 0%), avatar/ícone placeholder em bloco sólido `{colors.muted}`, `{rounded.sm}`.
 
 ## Do's and Don'ts
