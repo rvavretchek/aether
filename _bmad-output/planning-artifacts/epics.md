@@ -1,11 +1,16 @@
 ---
-stepsCompleted: [step-01-validate-prerequisites, step-02-design-epics]
+stepsCompleted: [step-01-validate-prerequisites, step-02-design-epics, step-01-validate-prerequisites-2026-10-20, step-02-design-epics-2026-10-20]
 inputDocuments:
   - '_bmad-output/planning-artifacts/prds/prd-Aether-2026-08-11/prd.md'
   - '_bmad-output/planning-artifacts/architecture/architecture-Aether-2026-08-14/ARCHITECTURE-SPINE.md'
   - '_bmad-output/specs/spec-Aether/SPEC.md'
   - '_bmad-output/specs/spec-Aether/glossary.md'
   - 'docs/architecture-uml-Aether.md'
+  - '_bmad-output/planning-artifacts/ux-designs/ux-Aether-2026-10-07/EXPERIENCE.md'
+  - '_bmad-output/planning-artifacts/ux-designs/ux-Aether-2026-10-07/DESIGN-minimal-saas.md'
+  - '_bmad-output/planning-artifacts/ux-designs/ux-Aether-2026-10-07/DESIGN-acolhedor.md'
+  - '_bmad-output/planning-artifacts/ux-designs/ux-Aether-2026-10-07/DESIGN-tecnico-premium.md'
+  - '_bmad-output/planning-artifacts/ux-designs/ux-Aether-2026-10-07/DESIGN-autoral.md'
 ---
 
 # Aether - Epic Breakdown
@@ -63,6 +68,7 @@ NFR8 (Usabilidade — setup): Do zero ao "Hello World" funcional em no máximo 3
 NFR9 (Usabilidade — administração): Organizar N usuários em M grupos/papéis exige O(M) ações via seleção múltipla, nunca uma ação por pessoa.
 NFR10 (Versionamento): Pré-1.0, interfaces de extensão podem mudar entre versões menores (documentado em changelog); a partir da v1.0, mudança de contrato exige major version bump (semver).
 NFR11 (Padrão de API/erro): Sucesso sem envelope; erro em RFC 9457 Problem Details (+ `invalid-params` em formato JSON Pointer RFC 6901); correlação via `traceparent` — convenção compartilhada com o projeto irmão Tecton.
+NFR12 (Internacionalização): Toda string de UI do Admin UI é autorada preparada para múltiplos idiomas desde o início — sempre chave+interpolação, nunca concatenação de string ou template literal com texto fixo intercalado a variável. Mecanismo concreto (biblioteca, formato de chave, onde strings vivem) é decisão de arquitetura separada, ainda em aberto (Deferred) — esta NFR fixa a disciplina de autoria, não a ferramenta. Decidida na sessão de UX `ux-Aether-2026-10-07` (2026-10-19).
 ```
 
 ### Additional Requirements
@@ -83,7 +89,25 @@ NFR11 (Padrão de API/erro): Sucesso sem envelope; erro em RFC 9457 Problem Deta
 
 ### UX Design Requirements
 
-Nenhum documento de UX (`bmad-ux`) existe ainda para o Aether. A convenção de componentes/estilo para as telas de administração (FR-14) fica como item em aberto (ver Architecture Spine → Deferred, e SPEC.md → Open Questions) — não travada por nenhuma epic/história abaixo além do necessário para uma UI funcional mínima.
+Sessão `bmad-ux` `ux-Aether-2026-10-07` finalizada (2026-10-19) — spine pair `EXPERIENCE.md` (comportamento/IA, um arquivo pros 4 presets) + 4 `DESIGN.md` (minimal-saas, acolhedor, tecnico-premium, autoral — Camada 0 do token de componente, AD-13 da Architecture Spine). Resolve o item antes em aberto (convenção de componentes/estilo pra FR-14).
+
+```
+UX-DR1: Admin UI usa shadcn/ui + Tailwind CSS v4 (Radix UI, componentes vendorizados — AD-13) como base; 4 presets visuais completos (claro+escuro nativo cada) escolhidos em `aether-admin new` (tempo de geração), nunca seletor em runtime.
+UX-DR2: Navegação primária é uma árvore lateral persistente (mestre-detalhe, padrão ConsoleOne/NDS) com ramos de categoria — Usuários/Grupos/Papéis — cada um expandindo em folhas (uma entidade por folha); busca no topo filtra e auto-expande até o nó encontrado.
+UX-DR3: Formulários de criar/editar User/Group/Role são desenhados por entidade (React Hook Form + `@hookform/resolvers/zod`, AD-13), reaproveitando os schemas Zod já existentes em `packages/shared/src/schemas/admin.ts` — nunca um formulário genérico gerado de schema em runtime.
+UX-DR4: Listas longas dentro de um ramo (muitos Usuários) e o relatório de import CSV usam TanStack Table v9 como coadjuvante da árvore — estado de sort/filtro/página sempre na URL (search params), nunca cache próprio competindo com o padrão `loader`+tRPC já fixado.
+UX-DR5: Associação Usuário↔Grupo tem dois caminhos de UI: a partir do Usuário (selecionar Grupo existente, Adicionar) e a partir do Grupo (seletor de membros navegável por Grupo de origem, multi-seleção, Adicionar em lote).
+UX-DR6: Atribuição de Papel com escopo por Módulo via modal dedicado — seletor de Papel + mini-árvore de Módulos (TanStack Virtual) para escolher o módulo-alvo; texto fixo explicando herança aditiva ("vale para este módulo e todos abaixo dele").
+UX-DR7: Importação de Usuários em lote (CSV) com prévia antes de confirmar (contagem válidos/duplicados/inválidos) e relatório linha-a-linha pós-confirmação — nunca só um resumo agregado de sucesso.
+UX-DR8: Revogar sessões de um Usuário é ação pontual com diálogo de confirmação nomeando a consequência real ("Ele(a) precisará entrar novamente"), nunca "Tem certeza?" genérico.
+UX-DR9: Menu de contexto (nó da árvore) sempre alcançável por teclado (clique direito OU tecla de menu de contexto/`Shift+F10`) — e qualquer ação crítica como "Editar" nunca fica exclusiva do menu de contexto, sempre também um botão visível no painel de detalhe.
+UX-DR10: Accessibility Floor — WCAG 2.2 AA; árvore com ARIA Tree View completo (`aria-expanded`/`aria-level`/`aria-selected`/`aria-posinset`/`aria-setsize`); tabela com `aria-sort`/`aria-selected`/`<th scope="col">` (wiring manual — TanStack Table v9 não emite isso nativamente); formulário com `aria-invalid`/`aria-describedby`/`aria-live` em erro (wiring manual — React Hook Form não injeta isso automaticamente); convenção de seta `→`/`←` da árvore é LTR-only, RTL fora de escopo.
+UX-DR11: Voice and tone — microcopy profissional e direta ("internal-tool com polimento consumer", não ferramenta pura nem produto de consumo celebrativo); nunca emoji, nunca "Tem certeza mesmo??", sempre números concretos em prévias (ex. "12 válidos, 2 duplicados, 1 inválido").
+UX-DR12: State patterns completos por superfície — carregando (skeleton no formato do que está vindo, nunca spinner genérico), vazio (com ação alternativa quando aplicável, ex. "Importar Usuários"), busca sem resultado, falha de carregamento (RFC 9457 + "Tentar novamente"), erro de validação inline com foco no campo, falha ao salvar com dados preservados.
+UX-DR13: **Fora do escopo de construção desta epic** — a camada "Empresas" (admin de sistema cross-tenant: listar/habilitar-desabilitar Tenant, bootstrap de admin via o mesmo fluxo único de convite por e-mail de qualquer usuário novo) é documentada no `EXPERIENCE.md` como experiência-alvo da forma de rota "SaaS 2 níveis", mas decisão do Boss (2026-10-20): deve ser **viabilizável por uma epic futura, nunca implementada nativamente agora** — é framework, não produto; um dev que não precisar dessa capacidade não deve carregá-la. Corrigido por Second-Order Thinking: como "simples"/"multi-tenant" produzem a MESMA UI, o PRÓPRIO prompt de 3 opções em `aether-admin new` (AD-13) teria efeito zero nesta epic — também fica deferido, não só a camada Empresas em si. Esta epic constrói uma UI só, incondicional, sem perguntar forma de rota.
+```
+
+**Nota de escopo**: como UX-DR13 remove a camada Empresas do build, as formas "simples" e "multi-tenant" (AD-13) produzem a MESMA superfície (árvore com ramos Usuários/Grupos/Papéis) — esta epic constrói uma única IA de verdade, não três.
 
 ### FR Coverage Map
 
@@ -101,8 +125,8 @@ FR10: Epic 2 - AuthProvider como interface (impl. local no MVP)
 FR11: Epic 2 (parcial: tabela User básica) + Epic 3 (parcial: Grupo/Papel/Módulo/ModuleClosure + relações)
 FR12: Epic 3 - herança aditiva de Papel sobre Módulo
 FR13: Epic 3 - Papel agrega Recursos (Permissão Nomeada MVP)
-FR14: Epic 5 - CRUD+organização de Usuários/Grupos/Papéis (revogar sessão aqui invoca o mecanismo da Epic 2)
-FR15: Epic 5 - import em lote (CSV) + email de config (reaproveita mecanismo de token único-uso construído na Epic 4)
+FR14: Epic 5 (backend tRPC) + Epic 7 (UI real — árvore+detalhe, CRUD+organização) - revogar sessão aqui invoca o mecanismo da Epic 2
+FR15: Epic 5 (backend tRPC) + Epic 7 (UI real — import CSV com prévia/relatório) - email de config reaproveita mecanismo de token único-uso da Epic 4
 FR16: Epic 1 - frontend só via tRPC, tipos inferidos
 FR17: Epic 1 - validação Zod compartilhada
 FR18: Epic 4 - interface unificada de email transacional
@@ -159,6 +183,15 @@ Reescrita arquitetural (sem feature nova, sem mudança de comportamento observá
 **Depende de:** Epic 5 (reescreve o que ela entregou).
 **Nota de implementação:** decisão do Boss (2026-10-09) de executar como uma única story grande, sem quebra por sub-recurso (diferente do padrão de stories pequenas usado na Epic 5) — schema + os 4 routers (`users`/`groups`/`roles`/`roleAssignments`) + todos os testes reescritos juntos numa só entrega. Ver `docs/aether-tecton-compatibility.md` e a Architecture Spine (AD-11/AD-12, atualizada 2026-10-09) para o desenho completo.
 
+### Epic 7: Admin UI — Interface de Administração de Identidade
+Um administrador de tenant visualiza, cria, edita, remove e organiza Usuários/Grupos/Papéis através de uma interface real (árvore+detalhe, shadcn/ui) — sem precisar de chamadas tRPC manuais ou Postgres direto — importa usuários em lote via CSV com prévia e relatório, atribui Papel com escopo por Módulo, e revoga sessões ativas. Reaproveita 100% do backend já pronto (Epic 5) e o modelo `DirectoryObject`/Class Table Inheritance (Epic 6), sem nenhuma mudança de contrato de API tRPC. **Requisito explícito desde a motivação original (Discovery da sessão de UX):** a Admin UI não é só uma demo do framework — um dev que construir sua própria aplicação sobre o Aether DEVE conseguir reaproveitar essa interface dentro da própria aplicação dele (montável como sub-rota/sub-árvore dentro do layout do app do dev, nunca uma página isolada e intransferível), reduzindo o custo de construir do zero um mecanismo próprio de administração.
+**FRs cobertas:** FR14, FR15 (camada de apresentação — backend já entregue pela Epic 5)
+**Depende de:** Epic 5 (backend tRPC de Usuários/Grupos/Papéis/RoleAssignments), Epic 6 (modelo de dados `DirectoryObject`)
+**UX-DRs cobertos:** UX-DR1 a UX-DR12, ver seção "UX Design Requirements" acima (fonte: sessão `bmad-ux` `ux-Aether-2026-10-07`, `EXPERIENCE.md`+4 `DESIGN.md`, finalizada 2026-10-19).
+**Nota de escopo (decisão do Boss, 2026-10-20, corrigida 2026-10-20 por Second-Order Thinking):** UX-DR13 (camada "Empresas"/admin de sistema cross-tenant) fica **fora do escopo de construção** desta epic — é framework, não produto; essa capacidade deve ficar viabilizável por uma epic futura, nunca implementada nativamente, pra não forçar todo dev a carregar uma capacidade que talvez nunca precise. **Correção**: como "simples" e "multi-tenant" (AD-13) produzem a MESMA UI (Empresas é a única diferença entre as 3 formas, e ela não é construída), o PRÓPRIO prompt de 3 opções em `aether-admin new` teria efeito zero durante toda a vida desta epic — construí-lo agora seria esforço numa escolha invisível/morta, risco de confundir o dev. Esta epic constrói **uma UI só, incondicional** (sem perguntar forma de rota); o prompt de 3 opções fica deferido junto da própria camada de Empresas, pra quando uma epic futura construir a camada de sistema de verdade. Nenhuma story desta epic constrói backend cross-tenant, telas de Empresas, ou o prompt de escolha de forma em `aether-admin new`.
+**Nota de implementação (achado de pre-mortem, 2026-10-20 — ver Advanced Elicitation):** diferente da Story 6.1 ("numa tacada só", decisão deliberada porque era uma reescrita mecânica de schema+routers, um tipo só de transformação), esta epic cobre 5 frentes tecnicamente distintas e NÃO-mecânicas — tema visual (4 presets como código real), widget de árvore de navegação, 3 formulários de CRUD por entidade, fluxo de import CSV, modal de atribuição com mini-árvore de Módulo — mais wiring manual de ARIA (TanStack Table/RHF não fazem isso de graça) e disciplina de i18n. É também a PRIMEIRA vez que o projeto testa frontend de verdade (Epics 1-6 foram 100% backend) — nenhuma convenção de teste de componente/árvore/formulário existe ainda. Risco real de repetir o padrão de múltiplas tentativas/rate-limit que a Story 6.1 já viveu, agravado por não ter um script de transformação mecânica salvador. **Quebrar em stories pequenas desde o início** (oposto da 6.1), sugestão de sequência natural: (1) fundação visual+tema (presets como código real, convenção de teste de componente estabelecida), (2) árvore de navegação + painel de detalhe, (3) CRUD de Usuário + import CSV, (4) CRUD de Grupo/Papel + atribuição com escopo de Módulo, (5) revogar sessões + acessibilidade/polish final.
+**Achado de Assumption Audit (2026-10-20)**: as procedures `users.list`/`groups.list`/`roles.list` (Epic 5) não têm `.input()` nenhum — zero suporte a sort/filtro/paginação no servidor, contradizendo ao pé da letra a AD-13 ("estado de sort/filtro/página sempre na URL, lido pelo loader"). **Resolvido sem tocar backend**: sort/filtro/página do TanStack Table ficam 100% client-side, sobre a lista completa que o `loader` já busca de uma vez — mesma lógica de escala "dev/pequena-equipe" que a AD-13 já usa pra árvore/Virtual (sem lazy-load por nó). Nenhuma story desta epic deve adicionar paginação de servidor sem reabrir essa decisão primeiro.
+
 ### Observações de planejamento (não travam nenhuma epic)
 
-- **Risco de exposição de portfólio:** o valor visualmente demonstrável do diferencial do produto (árvore de identidade navegável) só existe a partir da Epic 5, a última do MVP. Epics 1–2 entregam valor real (CLI, auth) mas não são o "gancho" do pitch; Epic 3 entrega o motor mas sem tela. Se o cronograma apertar, a Epic 5 é a candidata natural a cortar — e é justamente a única que torna o diferencial visível. Sem mudança de estrutura por ora (decisão do Boss); registrado para referência em priorização futura caso o prazo aperte.
+- **Risco de exposição de portfólio (atualizado 2026-10-20):** o valor visualmente demonstrável do diferencial do produto (árvore de identidade navegável) só existe a partir da Epic 7 — a Epic 5 entregou só backend (procedures tRPC), nenhuma tela real; a nota original achava que a Epic 5 já seria o "gancho" visível, mas sem UI não há nada pra mostrar. Epics 1–2 entregam valor real (CLI, auth) mas não são o "gancho" do pitch; Epic 3 entrega o motor mas sem tela; Epics 5/6 entregam o backend+modelo de dados sem superfície visível. Se o cronograma apertar, a Epic 7 é a candidata MENOS cortável das últimas — é a única que torna o diferencial do produto visível de verdade.
