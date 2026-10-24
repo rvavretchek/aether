@@ -189,9 +189,218 @@ Um administrador de tenant visualiza, cria, edita, remove e organiza Usuários/G
 **Depende de:** Epic 5 (backend tRPC de Usuários/Grupos/Papéis/RoleAssignments), Epic 6 (modelo de dados `DirectoryObject`)
 **UX-DRs cobertos:** UX-DR1 a UX-DR12, ver seção "UX Design Requirements" acima (fonte: sessão `bmad-ux` `ux-Aether-2026-10-07`, `EXPERIENCE.md`+4 `DESIGN.md`, finalizada 2026-10-19).
 **Nota de escopo (decisão do Boss, 2026-10-20, corrigida 2026-10-20 por Second-Order Thinking):** UX-DR13 (camada "Empresas"/admin de sistema cross-tenant) fica **fora do escopo de construção** desta epic — é framework, não produto; essa capacidade deve ficar viabilizável por uma epic futura, nunca implementada nativamente, pra não forçar todo dev a carregar uma capacidade que talvez nunca precise. **Correção**: como "simples" e "multi-tenant" (AD-13) produzem a MESMA UI (Empresas é a única diferença entre as 3 formas, e ela não é construída), o PRÓPRIO prompt de 3 opções em `aether-admin new` teria efeito zero durante toda a vida desta epic — construí-lo agora seria esforço numa escolha invisível/morta, risco de confundir o dev. Esta epic constrói **uma UI só, incondicional** (sem perguntar forma de rota); o prompt de 3 opções fica deferido junto da própria camada de Empresas, pra quando uma epic futura construir a camada de sistema de verdade. Nenhuma story desta epic constrói backend cross-tenant, telas de Empresas, ou o prompt de escolha de forma em `aether-admin new`.
-**Nota de implementação (achado de pre-mortem, 2026-10-20 — ver Advanced Elicitation):** diferente da Story 6.1 ("numa tacada só", decisão deliberada porque era uma reescrita mecânica de schema+routers, um tipo só de transformação), esta epic cobre 5 frentes tecnicamente distintas e NÃO-mecânicas — tema visual (4 presets como código real), widget de árvore de navegação, 3 formulários de CRUD por entidade, fluxo de import CSV, modal de atribuição com mini-árvore de Módulo — mais wiring manual de ARIA (TanStack Table/RHF não fazem isso de graça) e disciplina de i18n. É também a PRIMEIRA vez que o projeto testa frontend de verdade (Epics 1-6 foram 100% backend) — nenhuma convenção de teste de componente/árvore/formulário existe ainda. Risco real de repetir o padrão de múltiplas tentativas/rate-limit que a Story 6.1 já viveu, agravado por não ter um script de transformação mecânica salvador. **Quebrar em stories pequenas desde o início** (oposto da 6.1), sugestão de sequência natural: (1) fundação visual+tema (presets como código real, convenção de teste de componente estabelecida), (2) árvore de navegação + painel de detalhe, (3) CRUD de Usuário + import CSV, (4) CRUD de Grupo/Papel + atribuição com escopo de Módulo, (5) revogar sessões + acessibilidade/polish final.
+**Nota de implementação (achado de pre-mortem, 2026-10-20 — ver Advanced Elicitation):** diferente da Story 6.1 ("numa tacada só", decisão deliberada porque era uma reescrita mecânica de schema+routers, um tipo só de transformação), esta epic cobre 5 frentes tecnicamente distintas e NÃO-mecânicas — tema visual (4 presets como código real), widget de árvore de navegação, 3 formulários de CRUD por entidade, fluxo de import CSV, modal de atribuição com mini-árvore de Módulo — mais wiring manual de ARIA (TanStack Table/RHF não fazem isso de graça) e disciplina de i18n. É também a PRIMEIRA vez que o projeto testa frontend de verdade (Epics 1-6 foram 100% backend) — nenhuma convenção de teste de componente/árvore/formulário existe ainda. Risco real de repetir o padrão de múltiplas tentativas/rate-limit que a Story 6.1 já viveu, agravado por não ter um script de transformação mecânica salvador. **Quebrar em stories pequenas desde o início** (oposto da 6.1) — sequência final, após refinamento por Critique and Refine (2026-10-24, que separou CRUD de Grupo/Papel da atribuição por Módulo, cada uma com superfície de UI própria): (1) fundação visual+tema, (2) árvore de navegação + painel de detalhe, (3) CRUD de Usuário + import CSV + revogar sessões, (4) CRUD de Grupo/Papel + associação User↔Group, (5) atribuição de Papel com escopo de Módulo, (6) acessibilidade/i18n/polish final.
+**Nota de segurança (achado de Security Audit Personas, 2026-10-24 — sem vulnerabilidade nova encontrada):** os diálogos de confirmação de ação destrutiva (revogar sessões, remover de grupo, remover atribuição de papel) nesta epic são proteção de UX, NUNCA a fronteira de segurança real — a checagem de autorização (`requireAdmin`+escopo de tenant) já é 100% server-side desde a Epic 5, e a validação Zod é compartilhada front/back (FR17). Nenhuma story desta epic deve tratar a confirmação da UI como suficiente pra pular ou afrouxar uma checagem server-side.
 **Achado de Assumption Audit (2026-10-20)**: as procedures `users.list`/`groups.list`/`roles.list` (Epic 5) não têm `.input()` nenhum — zero suporte a sort/filtro/paginação no servidor, contradizendo ao pé da letra a AD-13 ("estado de sort/filtro/página sempre na URL, lido pelo loader"). **Resolvido sem tocar backend**: sort/filtro/página do TanStack Table ficam 100% client-side, sobre a lista completa que o `loader` já busca de uma vez — mesma lógica de escala "dev/pequena-equipe" que a AD-13 já usa pra árvore/Virtual (sem lazy-load por nó). Nenhuma story desta epic deve adicionar paginação de servidor sem reabrir essa decisão primeiro.
 
 ### Observações de planejamento (não travam nenhuma epic)
 
 - **Risco de exposição de portfólio (atualizado 2026-10-20):** o valor visualmente demonstrável do diferencial do produto (árvore de identidade navegável) só existe a partir da Epic 7 — a Epic 5 entregou só backend (procedures tRPC), nenhuma tela real; a nota original achava que a Epic 5 já seria o "gancho" visível, mas sem UI não há nada pra mostrar. Epics 1–2 entregam valor real (CLI, auth) mas não são o "gancho" do pitch; Epic 3 entrega o motor mas sem tela; Epics 5/6 entregam o backend+modelo de dados sem superfície visível. Se o cronograma apertar, a Epic 7 é a candidata MENOS cortável das últimas — é a única que torna o diferencial do produto visível de verdade.
+
+## Stories da Epic 7 (Admin UI)
+
+> Nota de convenção: as Epics 1–6 não têm stories embutidas aqui — cada story delas virou um arquivo dedicado em `_bmad-output/implementation-artifacts/` via `bmad-sprint-planning`→`bmad-create-story`/`bmad-build`, formato bem mais rico que o deste step. A quebra abaixo é o backlog inicial da Epic 7 no formato leve deste skill; os arquivos ricos de cada story nascem quando ela entrar em sprint.
+
+### Story 7.1: Fundação visual e tema
+
+Como desenvolvedor usando o framework Aether,
+Eu quero que a base de componentes do Admin UI (shadcn/ui + Tailwind CSS v4, um dos 4 presets visuais) seja gerada como código real,
+Para que toda tela seguinte do Admin UI tenha uma base visual consistente, acessível e temática pra construir em cima.
+
+**Acceptance Criteria:**
+
+**Dado** que `aether-admin new` está gerando um projeto,
+**Quando** o gerador roda,
+**Então** `apps/web` inclui os primitivos shadcn/ui (Radix UI) vendorizados como arquivos de componente reais (nunca dependência de `node_modules`), consistente com a AD-13.
+
+**Dado** os 4 presets visuais (minimal-saas, acolhedor, tecnico-premium, autoral),
+**Quando** o gerador é invocado,
+**Então** exatamente os tokens de UM preset (claro+escuro, nomenclatura canônica shadcn, valores OKLCH) são embutidos no Tailwind config/CSS global do projeto gerado.
+
+**Dado** que dark mode é parte do default,
+**Quando** o app gerado carrega,
+**Então** a troca via classe `.dark` funciona de ponta a ponta sem FOUC (flash de conteúdo sem estilo) em pelo menos um componente (ex.: Button).
+
+**Dado** que esta é a primeira story de frontend do projeto,
+**Quando** um teste de componente é escrito,
+**Então** existe uma convenção documentada de teste (Vitest + Testing Library ou equivalente), committada como o padrão que as stories seguintes seguem.
+
+**E** nenhuma story deste conjunto constrói um seletor de preset em runtime — é escolha de tempo de geração (AD-13), nunca uma `Theme Switcher` na UI.
+
+### Story 7.2: Árvore de navegação e painel de detalhe
+
+Como admin de tenant,
+Eu quero uma árvore lateral persistente (Usuários/Grupos/Papéis) com painel de detalhe,
+Para que eu navegue e selecione qualquer objeto de identidade do mesmo jeito que num console de diretório clássico.
+
+**Acceptance Criteria:**
+
+**Dado** que o admin faz login,
+**Quando** ele chega em `/admin`,
+**Então** uma árvore lateral com 3 ramos de categoria (Usuários, Grupos, Papéis) renderiza, cada um expansível listando suas entidades como folhas.
+
+**Dado** que uma folha é clicada,
+**Quando** a seleção muda,
+**Então** o painel de detalhe carrega os dados daquela entidade (skeleton enquanto carrega).
+
+**Dado** que o admin digita na busca da árvore,
+**Quando** existe uma correspondência,
+**Então** a árvore expande automaticamente e rola/destaca até a folha encontrada (debounce de ~250ms).
+
+**Dado** que não há correspondência,
+**Quando** a busca retorna vazia,
+**Então** aparece "Nenhum {tipo} encontrado para '{termo}'." — nunca uma árvore que simplesmente não reage.
+
+**Dado** navegação só por teclado,
+**Quando** o admin usa setas/Enter,
+**Então** a árvore é totalmente operável sem mouse, com `aria-expanded`/`aria-level`/`aria-selected`/`aria-posinset`/`aria-setsize` corretos em cada nó.
+
+**Dado** um clique direito ou `Shift+F10` num nó,
+**Quando** acionado,
+**Então** um menu de contexto abre só com as ações válidas pra aquele tipo de nó.
+
+**E** o TanStack Virtual virtualiza só a renderização; a árvore inteira é buscada de uma vez via o `loader` da rota (sem lazy-load por nó), consistente com a AD-13.
+
+**Dado** um ramo sem nenhuma entidade (ex.: tenant novo sem Grupos),
+**Quando** o admin expande esse ramo,
+**Então** aparece "Nenhum {grupo/usuário/papel} ainda." — nunca um ramo que simplesmente não expande ou fica em branco sem explicação (achado de Boundary & Edge Case Sweep, 2026-10-24).
+
+**Dado** que o admin clica rapidamente em duas folhas diferentes em sequência,
+**Quando** a resposta da PRIMEIRA seleção chega depois da resposta da SEGUNDA (fora de ordem),
+**Então** o painel de detalhe mostra sempre o dado da seleção MAIS RECENTE, nunca sobrescrito por uma resposta tardia de uma seleção já abandonada (achado de Boundary & Edge Case Sweep, 2026-10-24).
+
+**Dado** que o `loader` falha ao buscar a árvore inteira no carregamento inicial de `/admin`,
+**Quando** isso acontece,
+**Então** a tela mostra mensagem RFC 9457 + botão "Tentar novamente" no lugar da árvore — nunca uma tela em branco ou travada (achado de Failure Mode Analysis, 2026-10-24).
+
+### Story 7.3: CRUD de Usuário, import CSV e revogar sessões
+
+Como admin de tenant,
+Eu quero criar/editar/visualizar Usuários, importar um lote via CSV, e revogar sessões de um Usuário,
+Para que eu administre onboarding/offboarding sem chamada de API manual.
+
+**Acceptance Criteria:**
+
+**Dado** que o admin seleciona "+ Novo Usuário" (ou abre um Usuário existente),
+**Quando** ele submete o formulário,
+**Então** a validação usa o schema Zod JÁ EXISTENTE de `packages/shared/src/schemas/admin.ts` (React Hook Form + `@hookform/resolvers/zod`), com `form-field-error` inline + `aria-invalid`/`aria-describedby` em caso de falha.
+
+**Dado** um novo Usuário válido,
+**Quando** submetido,
+**Então** `users.create` é chamado e o Usuário aparece como nova folha no ramo "Usuários" sem reload de página inteira.
+
+**Dado** que o admin faz upload de um CSV via "Importar",
+**Quando** o arquivo é processado,
+**Então** uma prévia mostra contagens (válidos/duplicados/inválidos) ANTES de qualquer escrita.
+
+**Dado** que o admin confirma a importação,
+**Quando** ela termina,
+**Então** um relatório linha-a-linha (importado/duplicado/erro+motivo) aparece — nunca só uma mensagem agregada de sucesso.
+
+**Dado** que o admin clica "Revogar sessões" num Usuário,
+**Quando** ele confirma o diálogo (que nomeia a consequência),
+**Então** `users.revokeSessions` é chamado e uma confirmação inline ("Sessões revogadas.") aparece, sem navegar pra fora da tela.
+
+**Dado** uma falha de rede/servidor ao salvar,
+**Quando** ela ocorre,
+**Então** os dados do formulário são preservados e uma mensagem baseada em RFC 9457 é mostrada — nunca perde o que o admin digitou.
+
+**Dado** um CSV que excede `MAX_BULK_IMPORT_ROWS` (500, limite já existente desde a Story 5.8),
+**Quando** o admin faz upload,
+**Então** a UI mostra uma mensagem clara de limite excedido ANTES de processar qualquer linha ou mostrar a prévia — nunca processa parcialmente até o limite (achado de Boundary & Edge Case Sweep, 2026-10-24).
+
+**Dado** que o admin clica "Revogar sessões" na PRÓPRIA conta,
+**Quando** ele confirma,
+**Então** a ação funciona normalmente (`users.revokeSessions` não distingue auto-revogação) e o admin é deslogado/redirecionado pro login de forma clara — nunca uma tela travada ou erro (achado de Boundary & Edge Case Sweep, 2026-10-24).
+
+**Dado** qualquer formulário de criar/editar (Usuário/Grupo/Papel),
+**Quando** o admin clica "Salvar"/"Confirmar" duas vezes em sequência rápida,
+**Então** só uma requisição é disparada (botão desabilitado/estado de pendente durante o envio) — nunca duas chamadas concorrentes pra mesma ação (achado de Failure Mode Analysis, 2026-10-24).
+
+### Story 7.4: CRUD de Grupo/Papel e associação User↔Group
+
+Como admin de tenant,
+Eu quero gerenciar Grupos e Papéis, e associar Usuários a Grupos pelos dois sentidos,
+Para que eu organize acesso sem múltiplas chamadas de API manuais.
+
+**Acceptance Criteria:**
+
+**Dado** CRUD de Grupo/Papel (criar/editar/remover),
+**Quando** executado,
+**Então** segue a mesma convenção de formulário/validação/erro da Story 7.3.
+
+**Dado** que o admin abre o detalhe de um Grupo,
+**Quando** ele seleciona um Usuário existente a partir da seção "Grupos" do próprio Usuário e clica "Adicionar",
+**Então** a associação atualiza imediatamente (caminho 1a — a partir do Usuário).
+
+**Dado** um Grupo recém-criado e vazio,
+**Quando** o admin abre o seletor de membros,
+**Então** ele navega/filtra candidatos POR grupo de origem (seletor em árvore), multi-seleciona, e clica "Adicionar em lote" (caminho 1b — a partir do Grupo).
+
+**Dado** uma tentativa de adição duplicada,
+**Quando** um membro selecionado já é do grupo,
+**Então** aquele item some da seleção em lote antes de confirmar, com nota explicando por quê — nunca erro silencioso.
+
+**Dado** um Usuário já membro de um Grupo,
+**Quando** o admin clica "Remover do grupo" (menu de contexto ou ação no painel de detalhe, achado de User Persona Focus Group, 2026-10-24),
+**Então** a associação é removida imediatamente, refletindo no painel de detalhe sem reload — simétrico à ação de Adicionar já coberta acima.
+
+### Story 7.5: Atribuição de Papel com escopo de Módulo
+
+Como admin de tenant,
+Eu quero atribuir (e remover) um Papel a um Usuário com escopo de Módulo,
+Para que eu conceda/revogue acesso de forma granular, sem múltiplas chamadas de API manuais.
+
+**Acceptance Criteria:**
+
+**Dado** que o admin clica "+ Atribuir Papel" num Usuário,
+**Quando** o modal abre,
+**Então** mostra um seletor de Papel + mini-árvore de Módulos (TanStack Virtual) pra escolher o módulo-alvo, com texto fixo explicando a herança aditiva (só desce).
+
+**Dado** que o admin confirma a atribuição,
+**Quando** ela termina,
+**Então** o modal fecha e a lista "Papéis atribuídos" do Usuário mostra a nova linha (coexistindo com atribuições anteriores) sem reload.
+
+**Dado** que o admin tenta atribuir o MESMO Papel com o MESMO Módulo-alvo que já existe pro Usuário,
+**Quando** ele confirma no modal,
+**Então** a UI trata como idempotente/aviso amigável ("Esta atribuição já existe.") — nunca cria uma linha duplicada nem mostra erro de servidor bruto (achado de Boundary & Edge Case Sweep, 2026-10-24, mesmo padrão de idempotência já usado no resto da Epic 5).
+
+**Dado** um projeto novo onde `generate module` ainda nunca rodou (árvore de Módulos genuinamente vazia),
+**Quando** o admin abre o modal "Atribuir Papel",
+**Então** a mini-árvore de Módulos mostra um estado vazio claro (ex.: "Nenhum módulo gerado ainda.") — nunca uma árvore quebrada ou um seletor sem feedback (achado de Failure Mode Analysis, 2026-10-24).
+
+**Dado** uma atribuição de Papel existente na lista "Papéis atribuídos" de um Usuário,
+**Quando** o admin clica "Remover"/"Revogar" naquela linha (com confirmação, mesma disciplina de ação destrutiva das demais stories),
+**Então** a atribuição específica é removida — nunca todas as atribuições do usuário, só a linha selecionada (achado de User Persona Focus Group, 2026-10-24).
+
+### Story 7.6: Polish final — acessibilidade, i18n e voz
+
+Como admin de tenant (e como desenvolvedor construindo sobre o Aether),
+Eu quero que o Admin UI atenda WCAG 2.2 AA de verdade, esteja pronto pra i18n, e tenha uma voz consistente e profissional,
+Para que a entrega seja produção de verdade, não um prototype.
+
+**Acceptance Criteria:**
+
+**Dado** qualquer tabela (TanStack Table, coadjuvante),
+**Quando** renderizada,
+**Então** `<th scope="col">`, `aria-sort` e `aria-selected` estão conectados manualmente (confirmado que não são automáticos da lib) e verificados por teste/auditoria de acessibilidade.
+
+**Dado** qualquer campo de formulário em erro,
+**Quando** a validação falha,
+**Então** `aria-invalid`/`aria-describedby`/`aria-live` disparam corretamente (verificado, não assumido do React Hook Form).
+
+**Dado** qualquer string de UI,
+**Quando** autorada,
+**Então** usa chave+interpolação (nunca concatenação de string) — auditado em todas as telas do Admin UI antes de fechar esta story (mecanismo/biblioteca continua Deferred, per NFR12 — só a disciplina de autoria é exigida aqui).
+
+**Dado** qualquer microcopy (sucesso/erro/vazio),
+**Quando** revisado,
+**Então** bate com a tabela Voice and Tone do `EXPERIENCE.md` (sem emoji, sem "Tem certeza mesmo??", números concretos em prévias).
+
+**Dado** navegação só por teclado em TODO o Admin UI (árvore, tabela, formulários, diálogos, menus de contexto),
+**Quando** testada de ponta a ponta,
+**Então** nenhuma ação é alcançável só por mouse — incluindo "Editar", que precisa existir também como botão visível, nunca exclusivo do menu de contexto.
+
+**Dado** os 4 presets visuais,
+**Quando** testados,
+**Então** o contraste dos pares de cor load-bearing (texto/fundo, especialmente pares do modo escuro) é verificado e documentado — fechando o gap que o Reviewer Gate da sessão de UX já tinha aceitado como risco.
