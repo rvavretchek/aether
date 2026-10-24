@@ -1,5 +1,5 @@
 ---
-stepsCompleted: [step-01-validate-prerequisites, step-02-design-epics, step-01-validate-prerequisites-2026-10-20, step-02-design-epics-2026-10-20]
+stepsCompleted: [step-01-validate-prerequisites, step-02-design-epics, step-01-validate-prerequisites-2026-10-20, step-02-design-epics-2026-10-20, step-03-create-stories-2026-10-24]
 inputDocuments:
   - '_bmad-output/planning-artifacts/prds/prd-Aether-2026-08-11/prd.md'
   - '_bmad-output/planning-artifacts/architecture/architecture-Aether-2026-08-14/ARCHITECTURE-SPINE.md'
@@ -278,6 +278,8 @@ Para que eu navegue e selecione qualquer objeto de identidade do mesmo jeito que
 Como admin de tenant,
 Eu quero criar/editar/visualizar Usuários, importar um lote via CSV, e revogar sessões de um Usuário,
 Para que eu administre onboarding/offboarding sem chamada de API manual.
+
+**Nota de escopo (achado da validação final, 2026-10-24):** "Remover Usuário" fica **fora do escopo desta story/epic** — `users.delete` nunca foi construído no backend (Epic 5); é pendência já registrada na retro da Epic 5 ("Deletar um User hoje não é uma feature que existe") e citada nos Dev Notes da Story 6.1. Como esta epic não muda a API (frontend-only), não há procedure pra UI chamar. Diferente de Grupo/Papel (Story 7.4), que já têm `delete` no backend desde a Epic 5.
 
 **Acceptance Criteria:**
 
