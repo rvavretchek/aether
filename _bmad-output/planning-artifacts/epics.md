@@ -184,12 +184,13 @@ Reescrita arquitetural (sem feature nova, sem mudança de comportamento observá
 **Nota de implementação:** decisão do Boss (2026-10-09) de executar como uma única story grande, sem quebra por sub-recurso (diferente do padrão de stories pequenas usado na Epic 5) — schema + os 4 routers (`users`/`groups`/`roles`/`roleAssignments`) + todos os testes reescritos juntos numa só entrega. Ver `docs/aether-tecton-compatibility.md` e a Architecture Spine (AD-11/AD-12, atualizada 2026-10-09) para o desenho completo.
 
 ### Epic 7: Admin UI — Interface de Administração de Identidade
-Um administrador de tenant visualiza, cria, edita, remove e organiza Usuários/Grupos/Papéis através de uma interface real (árvore+detalhe, shadcn/ui) — sem precisar de chamadas tRPC manuais ou Postgres direto — importa usuários em lote via CSV com prévia e relatório, atribui Papel com escopo por Módulo, e revoga sessões ativas. Reaproveita 100% do backend já pronto (Epic 5) e o modelo `DirectoryObject`/Class Table Inheritance (Epic 6), sem nenhuma mudança de contrato de API tRPC. **Requisito explícito desde a motivação original (Discovery da sessão de UX):** a Admin UI não é só uma demo do framework — um dev que construir sua própria aplicação sobre o Aether DEVE conseguir reaproveitar essa interface dentro da própria aplicação dele (montável como sub-rota/sub-árvore dentro do layout do app do dev, nunca uma página isolada e intransferível), reduzindo o custo de construir do zero um mecanismo próprio de administração.
+Um administrador de tenant visualiza, cria, edita, remove e organiza Usuários/Grupos/Papéis através de uma interface real (árvore+detalhe, shadcn/ui) — sem precisar de chamadas tRPC manuais ou Postgres direto — importa usuários em lote via CSV com prévia e relatório, atribui Papel com escopo por Módulo, e revoga sessões ativas. Reaproveita 100% do backend já pronto (Epic 5) e o modelo `DirectoryObject`/Class Table Inheritance (Epic 6), sem nenhuma mudança de contrato de API tRPC — exceto UMA procedure nova só de leitura, `admin.modules.list`, puramente aditiva (Story 7.6; achado do gate de prontidão, 2026-10-25). **Requisito explícito desde a motivação original (Discovery da sessão de UX):** a Admin UI não é só uma demo do framework — um dev que construir sua própria aplicação sobre o Aether DEVE conseguir reaproveitar essa interface dentro da própria aplicação dele (montável como sub-rota/sub-árvore dentro do layout do app do dev, nunca uma página isolada e intransferível), reduzindo o custo de construir do zero um mecanismo próprio de administração.
 **FRs cobertas:** FR14, FR15 (camada de apresentação — backend já entregue pela Epic 5)
 **Depende de:** Epic 5 (backend tRPC de Usuários/Grupos/Papéis/RoleAssignments), Epic 6 (modelo de dados `DirectoryObject`)
 **UX-DRs cobertos:** UX-DR1 a UX-DR12, ver seção "UX Design Requirements" acima (fonte: sessão `bmad-ux` `ux-Aether-2026-10-07`, `EXPERIENCE.md`+4 `DESIGN.md`, finalizada 2026-10-19).
 **Nota de escopo (decisão do Boss, 2026-10-20, corrigida 2026-10-20 por Second-Order Thinking):** UX-DR13 (camada "Empresas"/admin de sistema cross-tenant) fica **fora do escopo de construção** desta epic — é framework, não produto; essa capacidade deve ficar viabilizável por uma epic futura, nunca implementada nativamente, pra não forçar todo dev a carregar uma capacidade que talvez nunca precise. **Correção**: como "simples" e "multi-tenant" (AD-13) produzem a MESMA UI (Empresas é a única diferença entre as 3 formas, e ela não é construída), o PRÓPRIO prompt de 3 opções em `aether-admin new` teria efeito zero durante toda a vida desta epic — construí-lo agora seria esforço numa escolha invisível/morta, risco de confundir o dev. Esta epic constrói **uma UI só, incondicional** (sem perguntar forma de rota); o prompt de 3 opções fica deferido junto da própria camada de Empresas, pra quando uma epic futura construir a camada de sistema de verdade. Nenhuma story desta epic constrói backend cross-tenant, telas de Empresas, ou o prompt de escolha de forma em `aether-admin new`.
-**Nota de implementação (achado de pre-mortem, 2026-10-20 — ver Advanced Elicitation):** diferente da Story 6.1 ("numa tacada só", decisão deliberada porque era uma reescrita mecânica de schema+routers, um tipo só de transformação), esta epic cobre 5 frentes tecnicamente distintas e NÃO-mecânicas — tema visual (4 presets como código real), widget de árvore de navegação, 3 formulários de CRUD por entidade, fluxo de import CSV, modal de atribuição com mini-árvore de Módulo — mais wiring manual de ARIA (TanStack Table/RHF não fazem isso de graça) e disciplina de i18n. É também a PRIMEIRA vez que o projeto testa frontend de verdade (Epics 1-6 foram 100% backend) — nenhuma convenção de teste de componente/árvore/formulário existe ainda. Risco real de repetir o padrão de múltiplas tentativas/rate-limit que a Story 6.1 já viveu, agravado por não ter um script de transformação mecânica salvador. **Quebrar em stories pequenas desde o início** (oposto da 6.1) — sequência final, após refinamento por Critique and Refine (2026-10-24, que separou CRUD de Grupo/Papel da atribuição por Módulo, cada uma com superfície de UI própria): (1) fundação visual+tema, (2) árvore de navegação + painel de detalhe, (3) CRUD de Usuário + import CSV + revogar sessões, (4) CRUD de Grupo/Papel + associação User↔Group, (5) atribuição de Papel com escopo de Módulo, (6) acessibilidade/i18n/polish final.
+**Nota de implementação (achado de pre-mortem, 2026-10-20 — ver Advanced Elicitation):** diferente da Story 6.1 ("numa tacada só", decisão deliberada porque era uma reescrita mecânica de schema+routers, um tipo só de transformação), esta epic cobre 5 frentes tecnicamente distintas e NÃO-mecânicas — tema visual (4 presets como código real), widget de árvore de navegação, 3 formulários de CRUD por entidade, fluxo de import CSV, modal de atribuição com mini-árvore de Módulo — mais wiring manual de ARIA (TanStack Table/RHF não fazem isso de graça) e disciplina de i18n. É também a PRIMEIRA vez que o projeto testa frontend de verdade (Epics 1-6 foram 100% backend) — nenhuma convenção de teste de componente/árvore/formulário existe ainda. Risco real de repetir o padrão de múltiplas tentativas/rate-limit que a Story 6.1 já viveu, agravado por não ter um script de transformação mecânica salvador. **Quebrar em stories pequenas desde o início** (oposto da 6.1) — sequência final, após refinamento por Critique and Refine (2026-10-24, que separou CRUD de Grupo/Papel da atribuição por Módulo, cada uma com superfície de UI própria): (1) fundação visual+tema, (2) tela de login + sessão no cliente, (3) árvore de navegação + painel de detalhe, (4) CRUD de Usuário + import CSV + revogar sessões, (5) CRUD de Grupo/Papel + associação User↔Group, (6) atribuição de Papel com escopo de Módulo, (7) acessibilidade/i18n/polish final.
+**Achados do gate de prontidão (`bmad-sprint-planning`, 2026-10-25):** (a) nenhuma story construía tela de login nem gestão de token no cliente (o `apps/web` gerado só tinha `/`), embora as stories já pressupusessem login — nova Story 7.2, implementando o mecanismo já decidido na Architecture Spine; stories seguintes renumeradas (+1); (b) não existe procedure que liste Módulos, necessária pra mini-árvore da atribuição de Papel — Story 7.6 adiciona `admin.modules.list` só de leitura, única exceção aditiva à regra "sem mudança de API"; (c) não existe `users.listGroups` — Story 7.5 deriva no cliente; (d) o requisito de reaproveitar o Admin UI como sub-rota no app do dev não tinha nenhum AC — coberto na Story 7.3.
 **Nota de segurança (achado de Security Audit Personas, 2026-10-24 — sem vulnerabilidade nova encontrada):** os diálogos de confirmação de ação destrutiva (revogar sessões, remover de grupo, remover atribuição de papel) nesta epic são proteção de UX, NUNCA a fronteira de segurança real — a checagem de autorização (`requireAdmin`+escopo de tenant) já é 100% server-side desde a Epic 5, e a validação Zod é compartilhada front/back (FR17). Nenhuma story desta epic deve tratar a confirmação da UI como suficiente pra pular ou afrouxar uma checagem server-side.
 **Achado de Assumption Audit (2026-10-20)**: as procedures `users.list`/`groups.list`/`roles.list` (Epic 5) não têm `.input()` nenhum — zero suporte a sort/filtro/paginação no servidor, contradizendo ao pé da letra a AD-13 ("estado de sort/filtro/página sempre na URL, lido pelo loader"). **Resolvido sem tocar backend**: sort/filtro/página do TanStack Table ficam 100% client-side, sobre a lista completa que o `loader` já busca de uma vez — mesma lógica de escala "dev/pequena-equipe" que a AD-13 já usa pra árvore/Virtual (sem lazy-load por nó). Nenhuma story desta epic deve adicionar paginação de servidor sem reabrir essa decisão primeiro.
 
@@ -215,7 +216,7 @@ Para que toda tela seguinte do Admin UI tenha uma base visual consistente, acess
 
 **Dado** os 4 presets visuais (minimal-saas, acolhedor, tecnico-premium, autoral),
 **Quando** o gerador é invocado,
-**Então** exatamente os tokens de UM preset (claro+escuro, nomenclatura canônica shadcn, valores OKLCH) são embutidos no Tailwind config/CSS global do projeto gerado.
+**Então** `aether-admin new` pergunta qual preset usar (AD-13 — este é o único prompt novo desta epic; o prompt de forma de rota continua deferido, ver Nota de escopo da Epic 7), e exatamente os tokens de UM preset (claro+escuro, nomenclatura canônica shadcn, valores OKLCH) são embutidos no Tailwind config/CSS global do projeto gerado.
 
 **Dado** que dark mode é parte do default,
 **Quando** o app gerado carrega,
@@ -227,7 +228,41 @@ Para que toda tela seguinte do Admin UI tenha uma base visual consistente, acess
 
 **E** nenhuma story deste conjunto constrói um seletor de preset em runtime — é escolha de tempo de geração (AD-13), nunca uma `Theme Switcher` na UI.
 
-### Story 7.2: Árvore de navegação e painel de detalhe
+### Story 7.2: Tela de login e sessão no cliente
+
+Como admin de tenant,
+Eu quero entrar no Admin UI por uma tela de login real e permanecer autenticado enquanto navego,
+Para que eu acesse `/admin` sem montar chamadas tRPC de login manualmente.
+
+**Nota de origem (achado do gate de prontidão, 2026-10-25):** o `apps/web` gerado até a Epic 6 só tem a rota `/` — nenhuma tela de login nem gestão de token no cliente existe, mas as Stories 7.3/7.4 já pressupõem "o admin faz login" e "redirecionado pro login". O mecanismo já está decidido na Architecture Spine (linha "Autenticação"): access token em memória, refresh token em cookie `httpOnly`+`SameSite`, estado e lógica de refresh exclusivamente no client tRPC (`apps/web/src/trpc/client.ts`). Esta story só implementa o que já está decidido — usa `auth.login`/`auth.refresh` existentes (Epic 2), sem mudança de contrato de API.
+
+**Acceptance Criteria:**
+
+**Dado** um admin não autenticado,
+**Quando** ele acessa `/admin` (ou qualquer sub-rota),
+**Então** é redirecionado para a tela de login, e após login bem-sucedido volta para a rota originalmente pedida.
+
+**Dado** credenciais válidas,
+**Quando** o admin submete o formulário de login (React Hook Form + Zod compartilhado, mesma convenção de formulário da AD-13),
+**Então** `auth.login` é chamado, o access token fica só em memória (nunca `localStorage`/`sessionStorage`) e o refresh token chega via cookie `httpOnly`.
+
+**Dado** credenciais inválidas ou rate limit atingido (FR28),
+**Quando** o login falha,
+**Então** a tela mostra mensagem baseada em RFC 9457 (sem revelar se o e-mail existe) e preserva o e-mail digitado.
+
+**Dado** um access token expirado durante a navegação,
+**Quando** uma chamada tRPC recebe 401,
+**Então** o client tRPC chama `auth.refresh` uma única vez (chamadas concorrentes aguardam o mesmo refresh, nunca disparam vários) e repete a chamada original; se o refresh falhar, redireciona para o login.
+
+**Dado** um reload de página inteira,
+**Quando** o app carrega sem access token em memória,
+**Então** tenta `auth.refresh` via cookie antes de decidir redirecionar para o login — nunca desloga o admin só porque recarregou a página.
+
+**Dado** um usuário autenticado que NÃO é admin,
+**Quando** ele acessa `/admin`,
+**Então** vê uma mensagem clara de acesso negado (a checagem real continua sendo `requireAdmin` no servidor) — nunca uma tela em branco.
+
+### Story 7.3: Árvore de navegação e painel de detalhe
 
 Como admin de tenant,
 Eu quero uma árvore lateral persistente (Usuários/Grupos/Papéis) com painel de detalhe,
@@ -235,9 +270,13 @@ Para que eu navegue e selecione qualquer objeto de identidade do mesmo jeito que
 
 **Acceptance Criteria:**
 
-**Dado** que o admin faz login,
+**Dado** um admin autenticado (Story 7.2),
 **Quando** ele chega em `/admin`,
 **Então** uma árvore lateral com 3 ramos de categoria (Usuários, Grupos, Papéis) renderiza, cada um expansível listando suas entidades como folhas.
+
+**Dado** que um dev quer reaproveitar o Admin UI dentro da própria aplicação (requisito explícito da Epic 7),
+**Quando** ele monta a sub-árvore de rotas do Admin UI sob um caminho base diferente de `/admin` (ex.: `/backoffice/identidade`) dentro do layout do app dele,
+**Então** tudo funciona sem editar o código do Admin UI — nenhum link/navegação usa caminho absoluto hardcoded (sempre relativo ao caminho base), e o Admin UI é exportado como objeto de rota montável, não como página isolada; um teste cobre a montagem sob um caminho base não padrão (achado do gate de prontidão, 2026-10-25).
 
 **Dado** que uma folha é clicada,
 **Quando** a seleção muda,
@@ -273,13 +312,13 @@ Para que eu navegue e selecione qualquer objeto de identidade do mesmo jeito que
 **Quando** isso acontece,
 **Então** a tela mostra mensagem RFC 9457 + botão "Tentar novamente" no lugar da árvore — nunca uma tela em branco ou travada (achado de Failure Mode Analysis, 2026-10-24).
 
-### Story 7.3: CRUD de Usuário, import CSV e revogar sessões
+### Story 7.4: CRUD de Usuário, import CSV e revogar sessões
 
 Como admin de tenant,
 Eu quero criar/editar/visualizar Usuários, importar um lote via CSV, e revogar sessões de um Usuário,
 Para que eu administre onboarding/offboarding sem chamada de API manual.
 
-**Nota de escopo (achado da validação final, 2026-10-24):** "Remover Usuário" fica **fora do escopo desta story/epic** — `users.delete` nunca foi construído no backend (Epic 5); é pendência já registrada na retro da Epic 5 ("Deletar um User hoje não é uma feature que existe") e citada nos Dev Notes da Story 6.1. Como esta epic não muda a API (frontend-only), não há procedure pra UI chamar. Diferente de Grupo/Papel (Story 7.4), que já têm `delete` no backend desde a Epic 5.
+**Nota de escopo (achado da validação final, 2026-10-24):** "Remover Usuário" fica **fora do escopo desta story/epic** — `users.delete` nunca foi construído no backend (Epic 5); é pendência já registrada na retro da Epic 5 ("Deletar um User hoje não é uma feature que existe") e citada nos Dev Notes da Story 6.1. Como esta epic não muda a API (frontend-only), não há procedure pra UI chamar. Diferente de Grupo/Papel (Story 7.5), que já têm `delete` no backend desde a Epic 5.
 
 **Acceptance Criteria:**
 
@@ -319,7 +358,7 @@ Para que eu administre onboarding/offboarding sem chamada de API manual.
 **Quando** o admin clica "Salvar"/"Confirmar" duas vezes em sequência rápida,
 **Então** só uma requisição é disparada (botão desabilitado/estado de pendente durante o envio) — nunca duas chamadas concorrentes pra mesma ação (achado de Failure Mode Analysis, 2026-10-24).
 
-### Story 7.4: CRUD de Grupo/Papel e associação User↔Group
+### Story 7.5: CRUD de Grupo/Papel e associação User↔Group
 
 Como admin de tenant,
 Eu quero gerenciar Grupos e Papéis, e associar Usuários a Grupos pelos dois sentidos,
@@ -329,11 +368,15 @@ Para que eu organize acesso sem múltiplas chamadas de API manuais.
 
 **Dado** CRUD de Grupo/Papel (criar/editar/remover),
 **Quando** executado,
-**Então** segue a mesma convenção de formulário/validação/erro da Story 7.3.
+**Então** segue a mesma convenção de formulário/validação/erro da Story 7.4.
 
-**Dado** que o admin abre o detalhe de um Grupo,
-**Quando** ele seleciona um Usuário existente a partir da seção "Grupos" do próprio Usuário e clica "Adicionar",
-**Então** a associação atualiza imediatamente (caminho 1a — a partir do Usuário).
+**Dado** que o admin abre o detalhe de um Usuário,
+**Quando** ele seleciona um Grupo existente na seção "Grupos" do próprio Usuário e clica "Adicionar",
+**Então** `groups.addMember` é chamado e a associação atualiza imediatamente (caminho 1a — a partir do Usuário).
+
+**Dado** que a seção "Grupos" do Usuário precisa listar os Grupos dos quais ele é membro,
+**Quando** o painel de detalhe do Usuário carrega,
+**Então** a lista é derivada no cliente a partir de `groups.list` + `groups.listMembers` (não existe `users.listGroups` no backend) — mesma lógica de escala "dev/pequena-equipe" do Assumption Audit da Epic 7; nenhuma procedure nova é adicionada pra isso sem reabrir essa decisão (achado do gate de prontidão, 2026-10-25).
 
 **Dado** um Grupo recém-criado e vazio,
 **Quando** o admin abre o seletor de membros,
@@ -347,7 +390,7 @@ Para que eu organize acesso sem múltiplas chamadas de API manuais.
 **Quando** o admin clica "Remover do grupo" (menu de contexto ou ação no painel de detalhe, achado de User Persona Focus Group, 2026-10-24),
 **Então** a associação é removida imediatamente, refletindo no painel de detalhe sem reload — simétrico à ação de Adicionar já coberta acima.
 
-### Story 7.5: Atribuição de Papel com escopo de Módulo
+### Story 7.6: Atribuição de Papel com escopo de Módulo
 
 Como admin de tenant,
 Eu quero atribuir (e remover) um Papel a um Usuário com escopo de Módulo,
@@ -358,6 +401,10 @@ Para que eu conceda/revogue acesso de forma granular, sem múltiplas chamadas de
 **Dado** que o admin clica "+ Atribuir Papel" num Usuário,
 **Quando** o modal abre,
 **Então** mostra um seletor de Papel + mini-árvore de Módulos (TanStack Virtual) pra escolher o módulo-alvo, com texto fixo explicando a herança aditiva (só desce).
+
+**Dado** que o backend não tem nenhuma procedure que liste Módulos (o `adminRouter` só expõe `users`/`groups`/`roles`/`roleAssignments`),
+**Quando** esta story é implementada,
+**Então** adiciona UMA procedure nova só de leitura, `admin.modules.list` (`requireAdmin` + `forTenant`, retorna id/slug/pai/profundidade suficientes pra montar a árvore inteira de uma vez, sem lazy-load por nó) — a ÚNICA mudança de contrato de API permitida na Epic 7, puramente aditiva; nenhuma escrita sobre Módulo é exposta (Módulos continuam nascendo só via `generate module`, AD-6) (achado do gate de prontidão, 2026-10-25).
 
 **Dado** que o admin confirma a atribuição,
 **Quando** ela termina,
@@ -375,7 +422,7 @@ Para que eu conceda/revogue acesso de forma granular, sem múltiplas chamadas de
 **Quando** o admin clica "Remover"/"Revogar" naquela linha (com confirmação, mesma disciplina de ação destrutiva das demais stories),
 **Então** a atribuição específica é removida — nunca todas as atribuições do usuário, só a linha selecionada (achado de User Persona Focus Group, 2026-10-24).
 
-### Story 7.6: Polish final — acessibilidade, i18n e voz
+### Story 7.7: Polish final — acessibilidade, i18n e voz
 
 Como admin de tenant (e como desenvolvedor construindo sobre o Aether),
 Eu quero que o Admin UI atenda WCAG 2.2 AA de verdade, esteja pronto pra i18n, e tenha uma voz consistente e profissional,

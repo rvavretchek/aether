@@ -41,7 +41,7 @@
 # - Retrospective appends its action items to action_items; sprint-status surfaces open ones
 
 generated: 2026-08-27
-last_updated: 10-20-2026 11:30
+last_updated: 10-25-2026 10:00
 project: Aether
 project_key: NOKEY
 tracking_system: file-system
@@ -85,6 +85,16 @@ development_status:
   epic-6: done
   6-1-directory-object-migration: done
   epic-6-retrospective: optional
+
+  epic-7: backlog
+  7-1-visual-foundation-and-theme: backlog
+  7-2-login-screen-client-session: backlog
+  7-3-navigation-tree-detail-panel: backlog
+  7-4-user-crud-csv-import-revoke-sessions: backlog
+  7-5-group-role-crud-membership: backlog
+  7-6-module-scoped-role-assignment: backlog
+  7-7-final-polish-a11y-i18n-voice: backlog
+  epic-7-retrospective: optional
 action_items:
   - id: "epic-3-retro-item-1-construir-um-harness-reutilizavel-de-val"
     epic: 3
@@ -155,5 +165,5 @@ action_items:
       agora que todo o backend da Epic 5 esta pronto - e o unico trabalho que resta
       para tornar o diferencial do produto visivel."
     owner: "Boss"
-    status: open
+    status: done
     ref: "_bmad-output/implementation-artifacts/epic-5-retro-2026-10-07.md"
